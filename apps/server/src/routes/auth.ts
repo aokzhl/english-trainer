@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync, FastifyReply } from 'fastify'
-import { registerBodySchema } from '@wordforge/shared'
-import { issueRefreshToken, registerUser } from '../modules/auth'
+import { loginBodySchema, registerBodySchema } from '@wordforge/shared'
+import { issueRefreshToken, registerUser, verifyUser } from '../modules/auth'
 import { config } from '../app/config'
 
 export const REFRESH_COOKIE = 'refresh_token'
@@ -28,5 +28,19 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     setRefreshCookie(reply, refresh.token, refresh.expiresAt)
     return reply.status(201).send({ accessToken })
+  })
+
+  app.post('/login', async (request, reply) => {
+    const parsed = loginBodySchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ message: parsed.error.issues[0].message })
+    }
+
+    const { userId } = await verifyUser(app.db, parsed.data.email, parsed.data.password)
+    const refresh = issueRefreshToken(app.db, userId)
+    const accessToken = await reply.jwtSign({ sub: userId })
+
+    setRefreshCookie(reply, refresh.token, refresh.expiresAt)
+    return reply.status(200).send({ accessToken })
   })
 }

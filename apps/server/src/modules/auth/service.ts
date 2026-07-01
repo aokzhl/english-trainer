@@ -30,3 +30,19 @@ export async function registerUser(
 
   return { userId: user.id }
 }
+
+export async function verifyUser(
+  db: Db,
+  email: string,
+  password: string,
+): Promise<{ userId: number }> {
+  const user = db.select().from(users).where(eq(users.email, normalizeEmail(email))).get()
+  if (!user) {
+    throw new AuthError(401, 'Неверный email или пароль')
+  }
+  const ok = await bcrypt.compare(password, user.passwordHash)
+  if (!ok) {
+    throw new AuthError(401, 'Неверный email или пароль')
+  }
+  return { userId: user.id }
+}
