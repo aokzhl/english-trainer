@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync, FastifyReply } from 'fastify'
 import { loginBodySchema, registerBodySchema } from '@wordforge/shared'
-import { issueRefreshToken, registerUser, verifyUser } from '../modules/auth'
+import { AuthError, issueRefreshToken, registerUser, rotateRefreshToken, verifyUser } from '../modules/auth'
 import { config } from '../app/config'
 
 export const REFRESH_COOKIE = 'refresh_token'
@@ -41,6 +41,19 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const accessToken = await reply.jwtSign({ sub: userId })
 
     setRefreshCookie(reply, refresh.token, refresh.expiresAt)
+    return reply.status(200).send({ accessToken })
+  })
+
+  app.post('/refresh', async (request, reply) => {
+    const token = request.cookies[REFRESH_COOKIE]
+    if (!token) {
+      throw new AuthError(401, 'Сессия истекла, войдите снова')
+    }
+
+    const rotated = rotateRefreshToken(app.db, token)
+    const accessToken = await reply.jwtSign({ sub: rotated.userId })
+
+    setRefreshCookie(reply, rotated.token, rotated.expiresAt)
     return reply.status(200).send({ accessToken })
   })
 }
