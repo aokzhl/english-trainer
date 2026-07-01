@@ -387,16 +387,13 @@ git commit -m "feat(shared): zod-контракт auth (register/login/response)
 
 `apps/server/tests/db.test.ts`:
 ```ts
-import os from 'node:os'
-import path from 'node:path'
-import { randomUUID } from 'node:crypto'
 import { expect, test } from 'vitest'
 import { eq } from 'drizzle-orm'
 import { createDb } from '../src/db/client'
 import { refreshTokens, users } from '../src/db/schema'
 
 test('миграции применяются, users и refresh_tokens доступны', () => {
-  const db = createDb(path.join(os.tmpdir(), `wf-db-${randomUUID()}.db`))
+  const db = createDb(':memory:')
 
   const [user] = db
     .insert(users)
@@ -464,7 +461,9 @@ import * as schema from './schema'
 const migrationsFolder = path.join(import.meta.dirname, '../../drizzle')
 
 export function createDb(dbPath: string) {
-  fs.mkdirSync(path.dirname(dbPath), { recursive: true })
+  if (dbPath !== ':memory:') {
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true })
+  }
   const sqlite = new Database(dbPath)
   sqlite.pragma('journal_mode = WAL')
   sqlite.pragma('foreign_keys = ON')
@@ -535,16 +534,14 @@ export function buildApp(opts: { dbPath: string; logger?: boolean }) {
 
 `apps/server/tests/helpers.ts` (полный новый вид):
 ```ts
-import os from 'node:os'
-import path from 'node:path'
-import { randomUUID } from 'node:crypto'
 import { buildApp } from '../src/app/buildApp'
 
 type App = ReturnType<typeof buildApp>
 
+// ':memory:' — своя изолированная in-memory БД на каждый вызов (у better-sqlite3
+// она привязана к соединению, а app держит одно соединение). Ноль cleanup.
 export async function buildTestApp(extend?: (app: App) => void) {
-  const dbPath = path.join(os.tmpdir(), `wordforge-test-${randomUUID()}.db`)
-  const app = buildApp({ dbPath })
+  const app = buildApp({ dbPath: ':memory:' })
   extend?.(app)
   await app.ready()
   return app
