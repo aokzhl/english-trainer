@@ -46,3 +46,7 @@ export function rotateRefreshToken(
   const next = issueRefreshToken(db, row.userId)
   return { userId: row.userId, ...next }
 }
+
+export function revokeRefreshToken(db: Db, token: string): void {
+  db.delete(refreshTokens).where(eq(refreshTokens.tokenHash, hashToken(token))).run()
+}

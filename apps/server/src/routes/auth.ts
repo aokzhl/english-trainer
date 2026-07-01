@@ -1,6 +1,13 @@
 import type { FastifyPluginAsync, FastifyReply } from 'fastify'
 import { loginBodySchema, registerBodySchema } from '@wordforge/shared'
-import { AuthError, issueRefreshToken, registerUser, rotateRefreshToken, verifyUser } from '../modules/auth'
+import {
+  AuthError,
+  issueRefreshToken,
+  registerUser,
+  revokeRefreshToken,
+  rotateRefreshToken,
+  verifyUser,
+} from '../modules/auth'
 import { config } from '../app/config'
 
 export const REFRESH_COOKIE = 'refresh_token'
@@ -55,5 +62,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     setRefreshCookie(reply, rotated.token, rotated.expiresAt)
     return reply.status(200).send({ accessToken })
+  })
+
+  app.post('/logout', async (request, reply) => {
+    const token = request.cookies[REFRESH_COOKIE]
+    if (token) {
+      revokeRefreshToken(app.db, token)
+    }
+    reply.clearCookie(REFRESH_COOKIE, { path: '/api/auth' })
+    return reply.status(204).send()
   })
 }
