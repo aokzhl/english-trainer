@@ -48,5 +48,7 @@ export function rotateRefreshToken(
 }
 
 export function revokeRefreshToken(db: Db, token: string): void {
-  db.delete(refreshTokens).where(eq(refreshTokens.tokenHash, hashToken(token))).run()
+  db.delete(refreshTokens)
+    .where(eq(refreshTokens.tokenHash, hashToken(token)))
+    .run()
 }

@@ -36,7 +36,11 @@ export async function verifyUser(
   email: string,
   password: string,
 ): Promise<{ userId: number }> {
-  const user = db.select().from(users).where(eq(users.email, normalizeEmail(email))).get()
+  const user = db
+    .select()
+    .from(users)
+    .where(eq(users.email, normalizeEmail(email)))
+    .get()
   if (!user) {
     throw new AuthError(401, 'Неверный email или пароль')
   }
