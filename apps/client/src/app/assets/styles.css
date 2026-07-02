@@ -106,7 +106,7 @@
   --accent-foreground: var(--indigo-400);
 
   --destructive: var(--red-400);
-  --destructive-foreground: var(--neutral-950);
+  --destructive-foreground: var(--white);
 
   --success: var(--green-500);
   --success-foreground: var(--neutral-950);

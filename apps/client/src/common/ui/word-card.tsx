@@ -29,15 +29,17 @@ export function WordCard({
           </h3>
           <p className="text-muted-foreground">{translation}</p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="Озвучить произношение"
-          onClick={onSpeak}
-        >
-          <Volume2 className="size-5" />
-        </Button>
+        {onSpeak ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Озвучить произношение"
+            onClick={onSpeak}
+          >
+            <Volume2 className="size-5" />
+          </Button>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
