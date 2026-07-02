@@ -5,6 +5,7 @@ import type { Db } from '../db/client'
 import { AuthError } from '../modules/auth'
 import { authRoutes } from '../routes/auth'
 import { courseRoutes } from '../routes/courses'
+import { statsRoutes } from '../routes/stats'
 import { config } from './config'
 
 export function buildApp(opts: { db: Db; logger?: boolean }) {
@@ -20,6 +21,7 @@ export function buildApp(opts: { db: Db; logger?: boolean }) {
 
   app.register(authRoutes, { prefix: '/api/auth' })
   app.register(courseRoutes, { prefix: '/api/courses' })
+  app.register(statsRoutes, { prefix: '/api/stats' })
 
   app.get('/api/health', () => ({ status: 'ok' }))
 
