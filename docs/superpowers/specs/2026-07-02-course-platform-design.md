@@ -64,9 +64,12 @@ REQUIREMENTS ещё не реализована — разворот делае�
 ## 4. Модель данных (Drizzle / PostgreSQL)
 
 > **СУБД:** PostgreSQL (решение — делаем сразу под продакшен). Диалект Drizzle
-> `pg-core`, драйвер `postgres.js`. Прод — managed Postgres (дефолт **Neon**),
-> локальная разработка — `docker-compose`, тесты — **PGlite** (встроенный
-> Postgres в процессе, сохраняет схему «свежая БД на тест-файл»). Типы колонок
+> `pg-core`, драйвер `postgres.js`. Прод и локальная разработка —
+> **self-hosted Postgres в Docker** (`docker-compose`; на проде — VPS), тесты —
+> **PGlite** (встроенный Postgres в процессе, сохраняет схему «свежая БД на
+> тест-файл»). Проект учебный (прод-грейд ради практики бэкенда/инфры,
+> единственный пользователь — автор), поэтому managed БД сознательно не
+> используем — DB-ops практикуем сами. Типы колонок
 > ниже показаны обобщённо (`TEXT/INT`); в Postgres маппятся на
 > `varchar/text/integer/serial/timestamptz/boolean/jsonb`. Существующий модуль
 > `auth` мигрируется с SQLite на Postgres заодно (он маленький).
@@ -206,13 +209,18 @@ POST /api/lessons/:id/exam             {answers?} → генерация/про�
   Бизнес-логика `auth` не меняется, но **слой БД мигрирует с SQLite на Postgres**
   (`db/schema.ts`, `db/client.ts`, тесты).
 - **СУБД → PostgreSQL** (см. раздел 4): driver `postgres.js`, диалект `pg-core`,
-  `docker-compose` для dev, PGlite для тестов, managed Postgres (Neon) в проде.
-  Уходит native-build gotcha `better-sqlite3`.
+  `docker-compose` для dev, PGlite для тестов, **self-hosted Postgres в Docker
+  на VPS** в проде. Уходит native-build gotcha `better-sqlite3`.
 - **CLAUDE.md** обновляется под Postgres (разделы про SQLite/`better-sqlite3` и
   схему тестов) — в рамках итерации «Фундамент».
-- **Инфра:** в текущей итерации — БД-фундамент (Postgres, миграции, env,
-  docker-compose, PGlite). Полноценный CI/CD-деплой и контейнеризация приложения —
-  отдельным под-проектом позже.
+- **Инфраструктура — отдельный полноценный под-проект** (учебная цель: практика
+  инфры/систем-дизайна). Self-hosted на VPS: Dockerfile'ы приложения,
+  `docker-compose.prod`, reverse-proxy + TLS (Caddy), CI/CD автодеплой,
+  бэкапы Postgres + restore-драйлы, наблюдаемость (structured logs + метрики).
+  В итерации «Фундамент» — только БД-фундамент (Postgres, миграции, env,
+  docker-compose, PGlite); прод-деплой — свой под-проект.
+- **ADR** (`docs/adr/`) — короткие записи ключевых решений (БД, инфра, границы
+  модулей) для практики систем-дизайна.
 - Роуты клиента (TanStack, code-based): `/`, `/courses`, `/courses/$slug`
   (словарь или список уроков по типу), `/lessons/$id`, `/session`, `/dashboard`.
 

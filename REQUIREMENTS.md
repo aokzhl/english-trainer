@@ -174,7 +174,7 @@ Intermediate» (`docs/source/words-3000-intermediate.md`) — ~3000 слов,
 | Формы | React Hook Form (+ zodResolver) |
 | UI | shadcn/ui + Tailwind CSS |
 | Backend | Node.js + TypeScript + **Fastify** |
-| База данных | **PostgreSQL** + **Drizzle ORM** (`pg-core`, драйвер postgres.js, миграции через drizzle-kit). Прод — managed Postgres (Neon); dev — docker-compose; тесты — PGlite |
+| База данных | **PostgreSQL** + **Drizzle ORM** (`pg-core`, драйвер postgres.js, миграции через drizzle-kit). Self-hosted в Docker (dev и прод-VPS); тесты — PGlite |
 | Валидация/контракт | **Zod** в `@wordforge/shared` — переиспользуется на фронте |
 | Авторизация | email + пароль, bcrypt + JWT + stateful refresh (реализовано) |
 | ИИ | **Claude** (Anthropic SDK), только на сервере |
@@ -220,8 +220,11 @@ POST /api/lessons/:id/exam             ИИ-экзамен по теме
 - Пароли не хранятся в открытом виде; секреты (JWT, ключ ИИ) — через env
 - Тестирование — integration-first: `app.inject()` против **PGlite**
   (встроенный Postgres, свежая БД на тест-файл), ИИ-клиент замокан
-- **Продакшен с самого начала:** код и инфраструктура пишутся под прод
-  (managed Postgres, миграции на деплое, секреты через env)
+- **Прод-грейд ради практики:** проект учебный (единственный пользователь —
+  автор), но код и инфраструктура пишутся по продакшен-стандартам —
+  self-hosted на VPS (Docker, миграции на деплое, секреты через env, бэкапы,
+  наблюдаемость). Без преждевременного масштаба (никаких k8s/шардинга под
+  одного пользователя). Ключевые решения — в `docs/adr/`.
 
 ## 8. Объём MVP
 
