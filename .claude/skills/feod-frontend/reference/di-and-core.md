@@ -197,7 +197,8 @@ export const AuthServiceProvider = ({
 ```tsx
 // app/app.provider.tsx
 import { Compose } from '@/common/lib/react/compose-providers'
-import { SessionProvider, ThemeProvider } from '@/modules/core'
+import { ThemeProvider } from '@/common/theme/theme.provider'
+import { SessionProvider } from '@/modules/core'
 
 export const AppProvider = ({ children }: { children: ReactNode }) => (
   <Compose>
@@ -209,7 +210,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => (
 ```
 
 Направление импортов соблюдено: `app → modules → common`. Модули объявляют
-контракты (`AuthApi`, тип deps), `app` подставляет реализации.
+контракты (`AuthApi`, тип deps), `app` подставляет реализации. `ThemeProvider`
+берётся из `common`, а не из `core` — см. ниже «Когда НЕ в core, а в common».
 
 ## Использование в компоненте
 
@@ -270,31 +272,45 @@ modules/core/
 ├── index.ts                 # реэкспорт публичного API подмодулей
 └── modules/                 # фрактальность: core — модуль с подмодулями
     ├── auth/                # + session/ (стор сессии), формы, api, routes
-    ├── dialog-manager/
     ├── feature-flags/
-    ├── i18n/
-    └── theme/
+    └── i18n/
 ```
 
 ```typescript
 // modules/core/index.ts
 export * from './modules/auth'
-export * from './modules/dialog-manager'
 export * from './modules/feature-flags'
 export * from './modules/i18n'
-export * from './modules/theme'
 ```
 
 ## Критерий «класть в core»
 
 Единица относится к `core`, если:
 
-- это кросс-сквозная инфраструктура (сессия, тема, i18n, флаги, менеджер диалогов);
+- это кросс-сквозная инфраструктура (сессия, i18n, флаги);
 - от неё зависят другие (прикладные) модули и/или `app`;
-- она **сама НЕ зависит от прикладных модулей** (иначе это не фундамент).
+- она **сама НЕ зависит от прикладных модулей** (иначе это не фундамент);
+- её **НЕ нужно** потреблять из `common` (иначе — см. следующий раздел).
 
 `session` — каноничный пример: токен и `user`, на которые смотрят все остальные
 модули, но сам он не знает ни про один прикладной модуль.
+
+## Когда НЕ в core, а в common
+
+Ключевое ограничение: `common` **не может импортировать из `modules`** (импорт
+вверх по цепочке `app → pages → modules → common` запрещён). Поэтому если
+кросс-сквозную единицу должны **читать common-сущности** (например,
+`common/ui`-компоненты), её нельзя держать в `core` — её кладут в `common`.
+
+Каноничные примеры — **тема** (`theme`) и **менеджер диалогов**
+(`dialog-manager`): базовые UI-компоненты в `common/ui` хотят знать текущую тему
+или открыть диалог, а тянуть их из `modules/core` им нельзя. Значит стор + провайдер
+живут в `common` (напр. `common/theme/theme.store.ts` + `theme.provider.tsx` через
+`common/lib/react/create-di`), а `app` создаёт инстанс в composition root и
+прокидывает его в провайдер пропсом `value` — как для core-сторов.
+
+Правило: **потребитель из `common` → сущность в `common`; потребитель только из
+`modules`/`app` → сущность в `core`.**
 
 ## Это фрактальность, а не новый слой
 
