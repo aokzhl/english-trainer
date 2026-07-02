@@ -10,7 +10,9 @@ export type StatPillProps = {
 
 const toneClasses = {
   default: 'bg-muted text-muted-foreground',
-  streak: 'bg-streak/15 text-streak-foreground',
+  // streak uses text-foreground (not text-streak/-foreground): amber is too light
+  // for readable text, and --streak-foreground targets solid fills, not this tint
+  streak: 'bg-streak/15 text-foreground',
   success: 'bg-success/15 text-success',
 } as const
 
