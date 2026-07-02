@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17.2
+    environment:
+      POSTGRES_USER: wordforge
+      POSTGRES_PASSWORD: wordforge
+      POSTGRES_DB: wordforge
+    ports:
+      # bind to localhost only — не публикуем Postgres на все интерфейсы
+      # (важно при переиспользовании этого compose на VPS; см. ADR-0002)
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - wordforge_pg:/var/lib/postgresql/data
+
+volumes:
+  wordforge_pg:

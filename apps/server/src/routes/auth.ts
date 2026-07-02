@@ -12,17 +12,13 @@ import { config } from '../app/config'
 
 export const REFRESH_COOKIE = 'refresh_token'
 
-function setRefreshCookie(
-  reply: FastifyReply,
-  token: string,
-  expiresAt: string,
-) {
+function setRefreshCookie(reply: FastifyReply, token: string, expiresAt: Date) {
   reply.setCookie(REFRESH_COOKIE, token, {
     path: '/api/auth',
     httpOnly: true,
     sameSite: 'lax',
     secure: config.isProd,
-    expires: new Date(expiresAt),
+    expires: expiresAt,
   })
 }
 
@@ -38,7 +34,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       parsed.data.email,
       parsed.data.password,
     )
-    const refresh = issueRefreshToken(app.db, userId)
+    const refresh = await issueRefreshToken(app.db, userId)
     const accessToken = await reply.jwtSign({ sub: userId })
 
     setRefreshCookie(reply, refresh.token, refresh.expiresAt)
@@ -56,7 +52,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       parsed.data.email,
       parsed.data.password,
     )
-    const refresh = issueRefreshToken(app.db, userId)
+    const refresh = await issueRefreshToken(app.db, userId)
     const accessToken = await reply.jwtSign({ sub: userId })
 
     setRefreshCookie(reply, refresh.token, refresh.expiresAt)
@@ -69,7 +65,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       throw new AuthError(401, 'Сессия истекла, войдите снова')
     }
 
-    const rotated = rotateRefreshToken(app.db, token)
+    const rotated = await rotateRefreshToken(app.db, token)
     const accessToken = await reply.jwtSign({ sub: rotated.userId })
 
     setRefreshCookie(reply, rotated.token, rotated.expiresAt)
@@ -79,7 +75,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   app.post('/logout', async (request, reply) => {
     const token = request.cookies[REFRESH_COOKIE]
     if (token) {
-      revokeRefreshToken(app.db, token)
+      await revokeRefreshToken(app.db, token)
     }
     reply.clearCookie(REFRESH_COOKIE, { path: '/api/auth' })
     return reply.status(204).send()

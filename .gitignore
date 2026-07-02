@@ -4,3 +4,9 @@ dist/
 *.local
 .env
 .DS_Store
+
+# local worktrees & caches
+.claude/worktrees/
+__pycache__/
+.playwright-mcp/
+storybook-static/

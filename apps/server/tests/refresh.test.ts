@@ -50,11 +50,10 @@ test('без cookie → 401', async () => {
 test('просроченный токен → 401', async () => {
   const token = await registerAndGetRefresh('expired@example.com')
 
-  app.db
+  await app.db
     .update(refreshTokens)
-    .set({ expiresAt: new Date(Date.now() - 1000).toISOString() })
+    .set({ expiresAt: new Date(Date.now() - 1000) })
     .where(eq(refreshTokens.tokenHash, hashToken(token)))
-    .run()
 
   const res = await app.inject({
     method: 'POST',

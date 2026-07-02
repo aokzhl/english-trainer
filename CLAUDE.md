@@ -11,7 +11,7 @@ WordForge — a spaced-repetition English vocabulary trainer for Russian-speakin
 pnpm workspaces + Turborepo. Three packages:
 
 - `apps/client` — React 18 + Vite + TypeScript. Frontend, organized by **FEOD** (see below).
-- `apps/server` — Fastify + TypeScript. Drizzle ORM over SQLite (`better-sqlite3`).
+- `apps/server` — Fastify + TypeScript. Drizzle ORM over **PostgreSQL** (`postgres-js`; PGlite in tests).
 - `packages/shared` (`@wordforge/shared`) — the **single source of truth for the client↔server contract**: Zod schemas, DTO types, and shared constants (CEFR levels, decks, SRS intervals). The server validates requests with these schemas; the client reuses them in React Hook Form (`zodResolver`) and to type responses. Change the contract here and TypeScript breaks both sides at once — that's intentional.
 
 `apps` never import each other; shared code flows only through `packages/`.
@@ -35,16 +35,24 @@ Per-package / single-test (faster feedback loop):
 ```bash
 pnpm --filter server test                       # all server tests
 pnpm --filter server test tests/login.test.ts   # one file
-pnpm --filter server dev                         # server only, tsx watch
+pnpm --filter server dev                         # server only, tsx watch (needs docker compose up -d)
 pnpm --filter @wordforge/shared test
-pnpm --filter server db:generate                 # regenerate Drizzle migration after editing db/schema.ts
+pnpm --filter server db:generate                 # regenerate Drizzle migration (postgresql dialect) after editing db/schema.ts
 ```
 
 The linter is **oxlint** (not ESLint) and the formatter is **oxfmt** — separate tools (oxlint doesn't format, oxfmt doesn't lint). Formatting is repo-wide from a single root `.oxfmtrc.json` (project style: **single quotes, no semicolons**); it also sorts `package.json` keys. Type-checking is a dedicated `typecheck` script (`tsc`), also part of `build`. Git hooks (lefthook) run format+lint on pre-commit and format-check+lint+typecheck+test on pre-push.
 
-### Native build gotcha (pnpm 10)
+### PostgreSQL setup and dependencies
 
-pnpm 10 blocks dependency postinstall scripts by default, so `better-sqlite3`'s native binding may not build and the server/tests fail with "Could not locate the bindings file". The root `package.json` lists `pnpm.onlyBuiltDependencies: ["better-sqlite3", "bcrypt"]` — keep it. If the binding is still missing (no `*.node` under `node_modules/.pnpm/better-sqlite3@*/.../build/Release/`), build it manually: `cd` into that package dir and run `npm run build-release`. (`bcrypt` ships prebuilt binaries and needs no manual step.)
+The root `package.json` lists `pnpm.onlyBuiltDependencies: ["bcrypt"]` — keep it; `bcrypt` ships prebuilt binaries and needs no manual step.
+
+**Local development:** Start the Postgres database before running the server:
+```bash
+docker compose up -d  # starts db; default: wordforge user/pass at localhost:5432
+```
+The server reads the connection string from `DATABASE_URL` (default: `postgres://wordforge:wordforge@localhost:5432/wordforge`).
+
+**Tests:** No external database needed. Tests use in-process PGlite (`@electric-sql/pglite`) via `createTestDb()` — a fresh Postgres per test file, no cleanup required.
 
 Add dependencies with `pnpm add` (`-Dw` for root, `--filter <pkg>` for a package) — don't hand-edit versions into `package.json`.
 
@@ -73,10 +81,10 @@ Stack: MobX, TanStack Router, React Hook Form, shadcn/ui (generated into `common
 
 `apps/server/src` mirrors FEOD for the backend — thin routes delegate to modules:
 
-- `app/buildApp.ts` — assembles the Fastify instance (registers `@fastify/jwt`, `@fastify/cookie`, routes, a single `AuthError`-aware error handler, and decorates `app.db`). `buildApp({ dbPath })` is what both `entry.ts` and tests call. `app/config.ts` is the only place env vars are read.
+- `app/buildApp.ts` — assembles the Fastify instance (registers `@fastify/jwt`, `@fastify/cookie`, routes, a single `AuthError`-aware error handler, and decorates `app.db`). `buildApp({ db })` is what both `entry.ts` and tests call, where `db` is a `Db` instance. `app/config.ts` is the only place env vars are read.
 - `routes/` — thin handlers: parse/validate with a `@wordforge/shared` Zod schema, call a module function, map result to HTTP.
 - `modules/<domain>/` — business logic, public API via `index.ts` (e.g. `modules/auth`).
-- `db/` — `schema.ts` (Drizzle tables) + `client.ts` (`createDb(dbPath)` opens SQLite, enables FKs, runs migrations from `drizzle/`). Edit `schema.ts` then run `db:generate`.
+- `db/` — `schema.ts` (Drizzle tables) + `client.ts` (`createDb(url)` opens Postgres, runs migrations from `drizzle/`). Edit `schema.ts` then run `db:generate`.
 - `middlewares/requireAuth.ts` — `preHandler` guarding protected routes via access-JWT.
 
 Conventions: error responses are always `{ message: string }` with Russian text (the client's `httpClient` expects this shape). Emails stored lowercase.
@@ -89,4 +97,4 @@ Conventions: error responses are always `{ message: string }` with Russian text 
 
 ## Workflow (superpowers)
 
-This repo uses the superpowers plugin process for feature work: brainstorm → spec → plan → TDD implementation. Design specs go in `docs/superpowers/specs/`, implementation plans in `docs/superpowers/plans/` (see the auth-backend pair for the established format). Backend tests are integration-first: `vitest` driving `app.inject()` against a fresh in-memory SQLite (`:memory:`) per test file — no real port, no cleanup.
+This repo uses the superpowers plugin process for feature work: brainstorm → spec → plan → TDD implementation. Design specs go in `docs/superpowers/specs/`, implementation plans in `docs/superpowers/plans/` (see the auth-backend pair for the established format). Backend tests are integration-first: `vitest` driving `app.inject()` against a fresh in-process PGlite (`createTestDb()`) per test file — no external database, no real port, no cleanup.

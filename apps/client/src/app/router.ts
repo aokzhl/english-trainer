@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-router'
 import { ROUTES } from '@/common/constants/routes'
 import { NotFoundPage } from '@/pages/[...404]'
+import { CoursesPage } from '@/pages/courses'
 import { HomePage } from '@/pages/index'
 import { DefaultLayout } from './layouts/DefaultLayout'
 
@@ -19,6 +20,12 @@ const homeRoute = createRoute({
   component: HomePage,
 })
 
-const routeTree = rootRoute.addChildren([homeRoute])
+const coursesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTES.COURSES,
+  component: CoursesPage,
+})
+
+const routeTree = rootRoute.addChildren([homeRoute, coursesRoute])
 
 export const router = createRouter({ routeTree })
