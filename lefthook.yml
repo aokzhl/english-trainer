@@ -1,0 +1,25 @@
+# Git-хуки монорепы. Хуки ставятся автоматически (postinstall lefthook +
+# скрипт "prepare"). Пропустить разово: LEFTHOOK=0 git commit ...
+#
+# pre-commit — быстрый oxlint по staged-файлам с автофиксом, отдельно на
+# client и server (каждый берёт свой .oxlintrc.json).
+# pre-push — полный прогон через turbo: lint + typecheck (tsc) + тесты.
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: lint-client
+      root: apps/client/
+      glob: "*.{ts,tsx}"
+      run: pnpm exec oxlint --fix {staged_files}
+      stage_fixed: true
+    - name: lint-server
+      root: apps/server/
+      glob: "*.ts"
+      run: pnpm exec oxlint --fix {staged_files}
+      stage_fixed: true
+
+pre-push:
+  jobs:
+    - name: verify
+      run: pnpm turbo run lint typecheck test

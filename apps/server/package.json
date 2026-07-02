@@ -8,6 +8,7 @@
     "start": "tsx src/app/entry.ts",
     "build": "tsc --noEmit",
     "lint": "oxlint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate"
   },

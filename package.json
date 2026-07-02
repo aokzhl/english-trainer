@@ -6,12 +6,19 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "prepare": "lefthook install"
   },
   "devDependencies": {
+    "lefthook": "^2.1.9",
     "turbo": "^2.10.2"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3", "bcrypt"]
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "bcrypt",
+      "lefthook"
+    ]
   }
 }
