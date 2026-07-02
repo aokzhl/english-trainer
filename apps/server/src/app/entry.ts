@@ -1,8 +1,10 @@
 import { createDb } from '../db/client'
+import { seedCourses } from '../db/seed'
 import { buildApp } from './buildApp'
 import { config } from './config'
 
 const db = await createDb(config.databaseUrl)
+await seedCourses(db)
 const app = buildApp({ db, logger: true })
 
 app.listen({ port: config.port, host: '0.0.0.0' }).catch((error) => {
