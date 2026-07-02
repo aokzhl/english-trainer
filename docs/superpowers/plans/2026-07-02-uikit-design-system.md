@@ -729,7 +729,7 @@ git commit -m "feat(client): StatPill composite + story"
 
 ## Task 6: `ThemeStore` (TDD) + provider in `common/theme/` + wire into the graph + `ThemeToggle`
 
-Runtime light/dark. Store factory with injected side-effect ports (repo IoC style), unit-tested. `common/theme/` placement is a **documented FEOD deviation** (theme is normally a `core` submodule) — per user instruction; carry a justifying comment.
+Runtime light/dark. Store factory with injected side-effect ports (repo IoC style), unit-tested. **`common/theme/` placement is deliberate and FEOD-consistent:** `common/ui` components must be able to read the current theme, and `common` cannot import from `modules` — so the theme store must live at the `common` level to stay reachable from the UIKit. (FEOD's docs use `theme/` as a `core` example, but that example assumes theme is consumed only from `modules`/`app`; here it is also consumed from `common/ui`.)
 
 **Files:**
 - Create: `apps/client/src/common/theme/theme.store.ts`
@@ -796,9 +796,11 @@ Expected: FAIL — cannot resolve `./theme.store`.
 - [ ] **Step 3: Implement `common/theme/theme.store.ts`**
 
 ```ts
-// FEOD deviation (documented): theme is normally a modules/core submodule, but
-// per project decision it lives in common/. Store keeps side effects in injected
-// ports so it stays a testable, single-responsibility unit.
+// Theme lives in common/ (not modules/core, which FEOD's docs use as the example)
+// on purpose: common/ui components must be able to READ the current theme, and
+// common cannot import from modules (that would be an upward import). So the theme
+// store belongs at the common level to stay reachable from the UIKit. Side effects
+// are injected as ports so it stays a testable, single-responsibility unit.
 import { makeAutoObservable } from 'mobx'
 
 export type Theme = 'light' | 'dark'
