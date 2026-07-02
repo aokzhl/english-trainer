@@ -19,6 +19,15 @@ shadcn/ui + Tailwind CSS.
   друг о друге — IoC (интерфейс + внедрение из app), не прямой импорт
   внутренностей.
 
+### DI вместо синглтонов
+
+Для сторов/сервисов с зависимостями используем DI, а не module-scope синглтоны
+(`export const store = new Store()`): фабрика `createX(deps)` + провайдер модуля
+(`createDi`) + сборка графа в composition root (`app/composition-root.ts`).
+Механизм и правила — в скилле `feod-frontend`, `reference/di-and-core.md`.
+DI-хелперы живут в `common/lib/react/` (`create-di`, `create-strict-context`,
+`use-strict-context`), импорт прямой (без barrel).
+
 ### Шаблон стора
 
 ```typescript
