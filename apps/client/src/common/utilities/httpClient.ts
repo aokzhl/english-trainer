@@ -68,10 +68,12 @@ class HttpClient {
       },
     })
 
-    if (response.status === 401 && !retried && !path.startsWith('/auth/')) {
-      const newToken = await this.runRefresh()
-      if (newToken !== null) {
-        return this.request<T>(path, init, true)
+    if (response.status === 401 && !path.startsWith('/auth/')) {
+      if (!retried) {
+        const newToken = await this.runRefresh().catch(() => null)
+        if (newToken !== null) {
+          return this.request<T>(path, init, true)
+        }
       }
       onAuthFailure()
     }

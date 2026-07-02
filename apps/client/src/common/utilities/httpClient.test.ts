@@ -109,6 +109,42 @@ describe('httpClient', () => {
     expect(refresh).toHaveBeenCalledTimes(1)
   })
 
+  it('calls onAuthFailure when the retried request still returns 401', async () => {
+    const onAuthFailure = vi.fn()
+    const refresh = vi.fn(async () => 'new')
+    httpClient.configure({
+      baseUrl: '/api',
+      getToken: () => 'old',
+      refresh,
+      onAuthFailure,
+    })
+    fetchMock
+      .mockResolvedValueOnce(res(401, { message: 'нет' }))
+      .mockResolvedValueOnce(res(401, { message: 'опять' }))
+
+    await expect(httpClient.get('/cards')).rejects.toBeInstanceOf(HttpError)
+
+    expect(refresh).toHaveBeenCalledTimes(1)
+    expect(onAuthFailure).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onAuthFailure when refresh itself rejects', async () => {
+    const onAuthFailure = vi.fn()
+    httpClient.configure({
+      baseUrl: '/api',
+      getToken: () => 'old',
+      refresh: async () => {
+        throw new Error('refresh boom')
+      },
+      onAuthFailure,
+    })
+    fetchMock.mockResolvedValueOnce(res(401, { message: 'нет' }))
+
+    await expect(httpClient.get('/cards')).rejects.toBeInstanceOf(HttpError)
+
+    expect(onAuthFailure).toHaveBeenCalledTimes(1)
+  })
+
   it('returns undefined for 204 responses', async () => {
     httpClient.configure({
       baseUrl: '/api',
