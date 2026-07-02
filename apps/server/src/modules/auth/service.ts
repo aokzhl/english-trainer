@@ -16,25 +16,20 @@ export async function registerUser(
   password: string,
 ): Promise<{ userId: number }> {
   const normalized = normalizeEmail(email)
-  const existing = db
+  const [existing] = await db
     .select()
     .from(users)
     .where(eq(users.email, normalized))
-    .get()
+    .limit(1)
   if (existing) {
     throw new AuthError(409, 'Пользователь с таким email уже существует')
   }
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_COST)
-  const [user] = db
+  const [user] = await db
     .insert(users)
-    .values({
-      email: normalized,
-      passwordHash,
-      createdAt: new Date().toISOString(),
-    })
+    .values({ email: normalized, passwordHash })
     .returning()
-    .all()
 
   return { userId: user.id }
 }
@@ -44,11 +39,11 @@ export async function verifyUser(
   email: string,
   password: string,
 ): Promise<{ userId: number }> {
-  const user = db
+  const [user] = await db
     .select()
     .from(users)
     .where(eq(users.email, normalizeEmail(email)))
-    .get()
+    .limit(1)
   if (!user) {
     throw new AuthError(401, 'Неверный email или пароль')
   }

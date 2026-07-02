@@ -9,54 +9,42 @@ export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
 }
 
-export function issueRefreshToken(
+export async function issueRefreshToken(
   db: Db,
   userId: number,
-): { token: string; expiresAt: string } {
+): Promise<{ token: string; expiresAt: Date }> {
   const token = randomBytes(32).toString('base64url')
-  const now = new Date()
   const expiresAt = new Date(
-    now.getTime() + config.refreshTokenTtlDays * 24 * 60 * 60 * 1000,
-  ).toISOString()
-
-  db.insert(refreshTokens)
-    .values({
-      userId,
-      tokenHash: hashToken(token),
-      expiresAt,
-      createdAt: now.toISOString(),
-    })
-    .run()
-
+    Date.now() + config.refreshTokenTtlDays * 24 * 60 * 60 * 1000,
+  )
+  await db
+    .insert(refreshTokens)
+    .values({ userId, tokenHash: hashToken(token), expiresAt })
   return { token, expiresAt }
 }
 
-export function rotateRefreshToken(
+export async function rotateRefreshToken(
   db: Db,
   token: string,
-): { userId: number; token: string; expiresAt: string } {
-  const row = db
+): Promise<{ userId: number; token: string; expiresAt: Date }> {
+  const [row] = await db
     .select()
     .from(refreshTokens)
     .where(eq(refreshTokens.tokenHash, hashToken(token)))
-    .get()
-
+    .limit(1)
   if (!row) {
     throw new AuthError(401, 'Сессия истекла, войдите снова')
   }
-
-  db.delete(refreshTokens).where(eq(refreshTokens.id, row.id)).run()
-
-  if (row.expiresAt <= new Date().toISOString()) {
+  await db.delete(refreshTokens).where(eq(refreshTokens.id, row.id))
+  if (row.expiresAt <= new Date()) {
     throw new AuthError(401, 'Сессия истекла, войдите снова')
   }
-
-  const next = issueRefreshToken(db, row.userId)
+  const next = await issueRefreshToken(db, row.userId)
   return { userId: row.userId, ...next }
 }
 
-export function revokeRefreshToken(db: Db, token: string): void {
-  db.delete(refreshTokens)
+export async function revokeRefreshToken(db: Db, token: string): Promise<void> {
+  await db
+    .delete(refreshTokens)
     .where(eq(refreshTokens.tokenHash, hashToken(token)))
-    .run()
 }
