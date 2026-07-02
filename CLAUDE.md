@@ -77,7 +77,7 @@ Stack: MobX, TanStack Router, React Hook Form, shadcn/ui (generated into `common
 
 `apps/server/src` mirrors FEOD for the backend — thin routes delegate to modules:
 
-- `app/buildApp.ts` — assembles the Fastify instance (registers `@fastify/jwt`, `@fastify/cookie`, routes, a single `AuthError`-aware error handler, and decorates `app.db`). `buildApp(db)` is what both `entry.ts` and tests call, where `db` is a `Db` instance. `app/config.ts` is the only place env vars are read.
+- `app/buildApp.ts` — assembles the Fastify instance (registers `@fastify/jwt`, `@fastify/cookie`, routes, a single `AuthError`-aware error handler, and decorates `app.db`). `buildApp({ db })` is what both `entry.ts` and tests call, where `db` is a `Db` instance. `app/config.ts` is the only place env vars are read.
 - `routes/` — thin handlers: parse/validate with a `@wordforge/shared` Zod schema, call a module function, map result to HTTP.
 - `modules/<domain>/` — business logic, public API via `index.ts` (e.g. `modules/auth`).
 - `db/` — `schema.ts` (Drizzle tables) + `client.ts` (`createDb(url)` opens Postgres, runs migrations from `drizzle/`). Edit `schema.ts` then run `db:generate`.

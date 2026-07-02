@@ -5,6 +5,7 @@ import { coursesApi } from '../api/coursesApi'
 export class CoursesStore {
   courses: CourseDto[] = []
   loading = false
+  error: string | null = null
 
   constructor() {
     makeAutoObservable(this)
@@ -12,15 +13,32 @@ export class CoursesStore {
 
   async load() {
     this.loading = true
-    const courses = await coursesApi.list()
-    runInAction(() => {
-      this.courses = courses
-      this.loading = false
-    })
+    this.error = null
+    try {
+      const courses = await coursesApi.list()
+      runInAction(() => {
+        this.courses = courses
+      })
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message
+      })
+    } finally {
+      runInAction(() => {
+        this.loading = false
+      })
+    }
   }
 
   async enroll(slug: string) {
-    await coursesApi.enroll(slug)
-    await this.load()
+    this.error = null
+    try {
+      await coursesApi.enroll(slug)
+      await this.load()
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message
+      })
+    }
   }
 }
