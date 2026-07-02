@@ -39,7 +39,9 @@ class HttpClient {
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     if (!this.config) {
-      throw new Error('httpClient не сконфигурирован (см. app/integrations/http.ts)')
+      throw new Error(
+        'httpClient не сконфигурирован (см. app/integrations/http.ts)',
+      )
     }
     const { baseUrl, getToken, onUnauthorized } = this.config
     const token = getToken()
@@ -57,7 +59,9 @@ class HttpClient {
       onUnauthorized?.()
     }
     if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { message?: string } | null
+      const body = (await response.json().catch(() => null)) as {
+        message?: string
+      } | null
       throw new HttpError(response.status, body?.message ?? response.statusText)
     }
     return response.json() as Promise<T>

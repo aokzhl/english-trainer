@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "semi": false,
+  "printWidth": 80,
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.turbo/**",
+    "**/drizzle/**",
+    ".agents/**",
+    ".claude/**",
+    ".cursor/**",
+    "**/*.md",
+    "pnpm-lock.yaml",
+    "skills-lock.json"
+  ]
+}

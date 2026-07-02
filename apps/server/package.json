@@ -1,0 +1,35 @@
+{
+  "name": "server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/app/entry.ts",
+    "start": "tsx src/app/entry.ts",
+    "build": "tsc --noEmit",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/jwt": "^10.1.0",
+    "@wordforge/shared": "workspace:^",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.11.1",
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.13.2",
+    "drizzle-kit": "^0.31.10",
+    "oxlint": "^1.71.0",
+    "tsx": "^4.22.4",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.9"
+  }
+}

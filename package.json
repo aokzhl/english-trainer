@@ -1,13 +1,27 @@
 {
   "name": "english-trainer",
   "private": true,
-  "packageManager": "pnpm@10.6.5",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "prepare": "lefthook install"
   },
   "devDependencies": {
+    "lefthook": "^2.1.9",
+    "oxfmt": "^0.57.0",
     "turbo": "^2.10.2"
+  },
+  "packageManager": "pnpm@10.6.5",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "bcrypt",
+      "lefthook"
+    ]
   }
 }

@@ -1,4 +1,8 @@
-import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router'
 import { ROUTES } from '@/common/constants/routes'
 import { NotFoundPage } from '@/pages/[...404]'
 import { HomePage } from '@/pages/index'
