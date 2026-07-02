@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import type { CourseDto, CourseType } from '@wordforge/shared'
 import type { Db } from '../../db/client'
 import { AuthError } from '../auth'
@@ -38,14 +38,13 @@ export async function enrollInCourse(
   if (!course) {
     throw new AuthError(404, 'Курс не найден')
   }
-  const [existing] = await db
-    .select()
-    .from(enrollments)
-    .where(
-      and(eq(enrollments.userId, userId), eq(enrollments.courseId, course.id)),
-    )
-    .limit(1)
-  if (!existing) {
-    await db.insert(enrollments).values({ userId, courseId: course.id })
-  }
+  // Идемпотентно и без гонок: полагаемся на unique(userId, courseId).
+  // Повторная (в т.ч. параллельная) запись — тихий no-op вместо 500 по нарушению
+  // уникальности.
+  await db
+    .insert(enrollments)
+    .values({ userId, courseId: course.id })
+    .onConflictDoNothing({
+      target: [enrollments.userId, enrollments.courseId],
+    })
 }

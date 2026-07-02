@@ -21,7 +21,7 @@ export class CoursesStore {
       })
     } catch (e) {
       runInAction(() => {
-        this.error = (e as Error).message
+        this.error = e instanceof Error ? e.message : String(e)
       })
     } finally {
       runInAction(() => {
@@ -37,7 +37,7 @@ export class CoursesStore {
       await this.load()
     } catch (e) {
       runInAction(() => {
-        this.error = (e as Error).message
+        this.error = e instanceof Error ? e.message : String(e)
       })
     }
   }

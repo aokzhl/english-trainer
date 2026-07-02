@@ -27,15 +27,17 @@ export async function rotateRefreshToken(
   db: Db,
   token: string,
 ): Promise<{ userId: number; token: string; expiresAt: Date }> {
+  // Атомарная ротация: delete ... returning гарантирует, что при гонке двух
+  // параллельных refresh только один запрос удалит строку и получит её обратно —
+  // второй получит пустой результат и будет отклонён. Так исключается повторное
+  // использование одного refresh-токена.
   const [row] = await db
-    .select()
-    .from(refreshTokens)
+    .delete(refreshTokens)
     .where(eq(refreshTokens.tokenHash, hashToken(token)))
-    .limit(1)
+    .returning()
   if (!row) {
     throw new AuthError(401, 'Сессия истекла, войдите снова')
   }
-  await db.delete(refreshTokens).where(eq(refreshTokens.id, row.id))
   if (row.expiresAt <= new Date()) {
     throw new AuthError(401, 'Сессия истекла, войдите снова')
   }
