@@ -61,9 +61,18 @@ REQUIREMENTS ещё не реализована — разворот делае�
 `Courses` (оболочка) · `Vocabulary` (SRS) · `Grammar` (уроки/упражнения) ·
 `AI` (проверка/экзамен, только сервер) · `Auth` (есть) · `Stats` (дашборд/стрик).
 
-## 4. Модель данных (Drizzle / SQLite)
+## 4. Модель данных (Drizzle / PostgreSQL)
 
-Auth-таблицы (`users`, `refresh_tokens`) — без изменений. Новые таблицы:
+> **СУБД:** PostgreSQL (решение — делаем сразу под продакшен). Диалект Drizzle
+> `pg-core`, драйвер `postgres.js`. Прод — managed Postgres (дефолт **Neon**),
+> локальная разработка — `docker-compose`, тесты — **PGlite** (встроенный
+> Postgres в процессе, сохраняет схему «свежая БД на тест-файл»). Типы колонок
+> ниже показаны обобщённо (`TEXT/INT`); в Postgres маппятся на
+> `varchar/text/integer/serial/timestamptz/boolean/jsonb`. Существующий модуль
+> `auth` мигрируется с SQLite на Postgres заодно (он маленький).
+
+Auth-таблицы (`users`, `refresh_tokens`) — без изменений по составу полей. Новые
+таблицы:
 
 ```
 courses
@@ -194,14 +203,24 @@ POST /api/lessons/:id/exam             {answers?} → генерация/про�
   сохраняется как механика курса-словаря. Auth-раздел — без изменений.
 - **Код:** добавляются модули `Courses/Vocabulary/Grammar/AI/Stats` (сервер и
   клиент по FEOD), новые таблицы и миграции, схемы в `@wordforge/shared`.
-  Модуль `auth` не трогаем.
+  Бизнес-логика `auth` не меняется, но **слой БД мигрирует с SQLite на Postgres**
+  (`db/schema.ts`, `db/client.ts`, тесты).
+- **СУБД → PostgreSQL** (см. раздел 4): driver `postgres.js`, диалект `pg-core`,
+  `docker-compose` для dev, PGlite для тестов, managed Postgres (Neon) в проде.
+  Уходит native-build gotcha `better-sqlite3`.
+- **CLAUDE.md** обновляется под Postgres (разделы про SQLite/`better-sqlite3` и
+  схему тестов) — в рамках итерации «Фундамент».
+- **Инфра:** в текущей итерации — БД-фундамент (Postgres, миграции, env,
+  docker-compose, PGlite). Полноценный CI/CD-деплой и контейнеризация приложения —
+  отдельным под-проектом позже.
 - Роуты клиента (TanStack, code-based): `/`, `/courses`, `/courses/$slug`
   (словарь или список уроков по типу), `/lessons/$id`, `/session`, `/dashboard`.
 
 ## 9. Тестирование
 
-Integration-first, как в проекте: `vitest` + `app.inject()` против свежей
-`:memory:` SQLite на файл теста. ИИ-клиент замокан (детерминированные вердикты).
+Integration-first, как в проекте: `vitest` + `app.inject()` против свежего
+**PGlite** (встроенный Postgres) на файл теста — сохраняет быстрый детерминизм
+без внешнего Postgres в CI. ИИ-клиент замокан (детерминированные вердикты).
 Покрываем: запись на курс, SRS-переходы уровней и стрик, автопроверку
 упражнений, ИИ-проверку (через фейк), сдачу/провал экзамена, агрегаты дашборда.
 

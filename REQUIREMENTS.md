@@ -174,7 +174,7 @@ Intermediate» (`docs/source/words-3000-intermediate.md`) — ~3000 слов,
 | Формы | React Hook Form (+ zodResolver) |
 | UI | shadcn/ui + Tailwind CSS |
 | Backend | Node.js + TypeScript + **Fastify** |
-| База данных | SQLite + **Drizzle ORM** (миграции через drizzle-kit) |
+| База данных | **PostgreSQL** + **Drizzle ORM** (`pg-core`, драйвер postgres.js, миграции через drizzle-kit). Прод — managed Postgres (Neon); dev — docker-compose; тесты — PGlite |
 | Валидация/контракт | **Zod** в `@wordforge/shared` — переиспользуется на фронте |
 | Авторизация | email + пароль, bcrypt + JWT + stateful refresh (реализовано) |
 | ИИ | **Claude** (Anthropic SDK), только на сервере |
@@ -218,8 +218,10 @@ POST /api/lessons/:id/exam             ИИ-экзамен по теме
 - Адаптивная вёрстка, mobile-first (основной сценарий — телефон)
 - Запуск для разработки: `pnpm dev` в корне (Turborepo поднимает клиент и сервер)
 - Пароли не хранятся в открытом виде; секреты (JWT, ключ ИИ) — через env
-- Тестирование — integration-first: `app.inject()` против `:memory:` SQLite,
-  ИИ-клиент замокан
+- Тестирование — integration-first: `app.inject()` против **PGlite**
+  (встроенный Postgres, свежая БД на тест-файл), ИИ-клиент замокан
+- **Продакшен с самого начала:** код и инфраструктура пишутся под прод
+  (managed Postgres, миграции на деплое, секреты через env)
 
 ## 8. Объём MVP
 
