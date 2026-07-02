@@ -141,21 +141,23 @@ Icons: **Lucide** (already the configured `iconLibrary`). No emoji as structural
 
 ## 6. Runtime theming
 
-Minimal, FEOD-correct, mirrors the existing `modules/core/modules/Session` pattern.
+Mirrors the existing graph/provider pattern (`createGraph()` in `app/composition-root.ts` + `value`-prop providers like `SessionProvider`).
 
-- **`ThemeStore`** (MobX, in `modules/core/modules/Theme/`) — holds `theme: 'light' | 'dark' | 'system'`, resolves effective theme, toggles `.dark` on `document.documentElement`, persists to `localStorage`, and seeds initial value from `prefers-color-scheme`. All logic here (no logic in the component).
-- **`ThemeToggle`** (`common/ui/theme-toggle.tsx`) — thin `observer` button (Lucide sun/moon) calling `store.toggle()`. Presentational; store injected via the existing DI/provider mechanism (`create-di` / provider pattern already in the repo).
-- Initial theme class is applied before first paint (small inline set in the theme provider) to avoid a flash.
+- **Placement — `common/theme/` (per user instruction).** FEOD's own docs treat theme as the canonical `core` submodule (alongside `session`), so this is a **documented deviation**: the store + provider carry a justifying comment. `ThemeToggle` is an ordinary base UI component and lives in `common/ui/` uncontroversially.
+- **`createThemeStore(deps)`** (MobX factory, `common/theme/theme.store.ts`) — holds `theme: 'light' | 'dark'` (simplified; no persistent `system` mode — YAGNI), `toggle()`, `setTheme()`. Side effects injected as ports for testability (repo's IoC style): `getInitialTheme()` (reads storage, else `prefers-color-scheme`), `persist(theme)`, `applyClass(isDark)` (toggles `.dark` on `document.documentElement`). Applies class + persists on init and on every change.
+- **`ThemeProvider` + `useThemeStore`** (`common/theme/theme.provider.tsx`) — `value`-prop provider via `createDi`, matching `SessionProvider`. `theme: ThemeStore` is added to `AppGraph` in `composition-root.ts`; real ports are wired there (`localStorage`, `matchMedia`, `document.documentElement`).
+- **`ThemeToggle`** (`common/ui/theme-toggle.tsx`) — thin `observer` button (Lucide sun/moon) calling `store.toggle()`, consumes `useThemeStore`.
+- Because the store applies the class at construction (in the graph), the correct theme is set before first paint without needing the provider tree mounted.
 
 ---
 
 ## 7. Storybook harness
 
-**Storybook 9** with the **`@storybook/react-vite`** framework, reusing `apps/client/vite.config.ts` (so Tailwind v4 + the `@/` alias via `vite-tsconfig-paths` work automatically). Exact versions verified against current docs during the implementation plan.
+**Storybook latest** (currently **v10.x**, via `storybook@latest init`) with the **`@storybook/react-vite`** framework, reusing `apps/client/vite.config.ts` (so Tailwind v4 + the `@/` alias via `vite-tsconfig-paths` work automatically). `main.ts` uses `defineMain` from `@storybook/react-vite/node`. (Fallback: if v10 has trouble with Vite 8, pin to Storybook 9 — same framework/addon API.)
 
 **Config (`apps/client/.storybook/`):**
 
-- `main.ts` — framework `@storybook/react-vite`; `stories: ['../src/**/*.stories.@(ts|tsx)', '../src/**/*.mdx']`; addons: **`@storybook/addon-a11y`** (axe pass), **`@storybook/addon-themes`** (light/dark toolbar via `withThemeByClassName`, toggling `.dark`), docs autodocs.
+- `main.ts` — `defineMain({ framework: '@storybook/react-vite', stories: ['../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx)'], addons: [...] })`; addons: **`@storybook/addon-a11y`** (axe pass), **`@storybook/addon-themes`** (light/dark toolbar via `withThemeByClassName({ themes: { light: '', dark: 'dark' }, defaultTheme: 'light' })`), **`@storybook/addon-docs`** (autodocs). If `init` adds `@storybook/addon-vitest`, remove it (see §7.1).
 - `preview.ts` — imports `@/app/assets/styles.css` (real tokens); global `decorators` for the theme class + a padded, `bg-background text-foreground` canvas; `parameters` set backgrounds off (theme owns the background), viewport presets `375 / 768 / 1024 / 1440`.
 
 **Story conventions:**
@@ -195,11 +197,11 @@ apps/client/
 │   │   ├── … (all generated primitives, each + .stories.tsx)
 │   │   ├── word-card.tsx + word-card.stories.tsx      # composite
 │   │   ├── stat-pill.tsx + stat-pill.stories.tsx      # composite
-│   │   └── theme-toggle.tsx + theme-toggle.stories.tsx
-│   └── modules/core/modules/Theme/
-│       ├── theme.store.ts + theme.store.test.ts
-│       ├── theme.provider.tsx
-│       └── index.ts
+│   │   │   └── theme-toggle.tsx + theme-toggle.stories.tsx
+│   │   └── theme/                                     # documented FEOD deviation (per user)
+│   │       ├── theme.store.ts + theme.store.test.ts
+│   │       └── theme.provider.tsx
+│   └── app/composition-root.ts # ← add `theme` to AppGraph, wire real ports
 ├── vite.config.ts              # ← add vite-tsconfig-paths, drop dead option
 └── package.json                # ← storybook scripts + deps
 ```
@@ -210,8 +212,8 @@ apps/client/
 
 All via `pnpm add --filter client` (never hand-edit versions — project rule).
 
-- **Dev:** `storybook`, `@storybook/react-vite`, `@storybook/addon-a11y`, `@storybook/addon-themes`, `vite-tsconfig-paths`.
-- **Runtime (fonts):** `@fontsource-variable/inter`, `@fontsource-variable/plus-jakarta-sans` (or CDN import — decide at plan time).
+- **Dev:** `storybook` + `@storybook/react-vite` + `@storybook/addon-a11y` + `@storybook/addon-docs` (via `storybook@latest init`), `@storybook/addon-themes` (via `storybook add`), `vite-tsconfig-paths`.
+- **Runtime (fonts):** `@fontsource-variable/inter`, `@fontsource-variable/plus-jakarta-sans` (self-hosted, decided).
 - shadcn primitives pull their own Radix deps automatically via the CLI.
 
 ---
