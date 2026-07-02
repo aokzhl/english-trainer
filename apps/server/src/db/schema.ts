@@ -1,10 +1,10 @@
 import {
-  boolean,
   integer,
   pgTable,
   serial,
   text,
   timestamp,
+  unique,
   varchar,
 } from 'drizzle-orm/pg-core'
 
@@ -36,3 +36,32 @@ export const refreshTokens = pgTable('refresh_tokens', {
     .notNull()
     .defaultNow(),
 })
+
+export const courses = pgTable('courses', {
+  id: serial('id').primaryKey(),
+  slug: varchar('slug', { length: 64 }).notNull().unique(),
+  type: varchar('type', { length: 16 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  description: text('description').notNull().default(''),
+  order: integer('order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+    .notNull()
+    .defaultNow(),
+})
+
+export const enrollments = pgTable(
+  'enrollments',
+  {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    courseId: integer('course_id')
+      .notNull()
+      .references(() => courses.id, { onDelete: 'cascade' }),
+    enrolledAt: timestamp('enrolled_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [unique().on(t.userId, t.courseId)],
+)

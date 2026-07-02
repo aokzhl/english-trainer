@@ -8,6 +8,13 @@
       "when": 1783015694730,
       "tag": "0000_silly_naoko",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783016675888,
+      "tag": "0001_fearless_paladin",
+      "breakpoints": true
     }
   ]
 }
