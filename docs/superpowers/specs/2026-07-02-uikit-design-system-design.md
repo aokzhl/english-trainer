@@ -169,9 +169,14 @@ Minimal, FEOD-correct, mirrors the existing `modules/core/modules/Session` patte
 
 **Tooling fit:** oxfmt/oxlint already glob `.tsx` — stories are formatted/linted automatically. We do **not** add the Storybook ESLint plugin (repo uses oxlint, not ESLint). Turborepo: add a `build-storybook` task with `storybook-static/**` output (optional, low priority).
 
-### 7.1 Testing decision
+### 7.1 Testing & verification decision
 
-Keep the existing **Vitest + jsdom** setup for logic/behavior tests. Storybook runs **standalone** for building + documenting the kit. We deliberately **skip** `@storybook/addon-vitest` (browser/Playwright story-tests) for now — it adds Playwright weight and the project's primary learning focus is backend/infra. Revisit if we want story-as-test later. The a11y addon already gives per-story axe feedback cheaply.
+Two layers, deliberately separated:
+
+- **Logic tests:** keep the existing **Vitest + jsdom** setup (e.g. `ThemeStore`). No change.
+- **Visual/interaction verification:** driven by the **Playwright MCP browser** against a running Storybook (`storybook dev -p 6006`). During implementation we navigate to each story's iframe URL and, for the seeded components, verify in **both themes** at **375 / 768 / 1024 / 1440**: correct rendering, no console errors, focus/hover states, and no critical axe violations (a11y addon). Screenshots captured as evidence. This is the primary "does it actually look/behave right" gate — see §10.
+
+We still **skip** the `@storybook/addon-vitest` package (in-CI browser story-tests) for now — Playwright-MCP verification during development covers the need without wiring Playwright into the test pipeline. Revisit if we later want story-as-test in CI.
 
 ---
 
@@ -215,8 +220,9 @@ All via `pnpm add --filter client` (never hand-edit versions — project rule).
 
 - **`ThemeStore`** — unit test (Vitest): default from `prefers-color-scheme`, toggle flips class + persists, rehydrates from `localStorage`. Mirrors `session.store.test.ts`.
 - **Storybook build** — `pnpm --filter client build-storybook` succeeds (catches broken stories/imports).
-- **a11y** — no critical axe violations in the addon panel for seeded components (contrast, labels, focus).
-- **Manual** — run Storybook, verify every component in light + dark at 375 / 768 / 1024 / 1440; confirm `@/` resolves; confirm `pnpm --filter client build` and `pnpm --filter client typecheck` stay green.
+- **Playwright MCP visual pass** — with Storybook running, drive the browser to each seeded component's story and verify in **light + dark** at **375 / 768 / 1024 / 1440**: renders correctly, no console errors, focus/hover states work, screenshots captured. This is the main visual gate.
+- **a11y** — no critical axe violations (a11y addon) for seeded components (contrast, labels, focus).
+- **Alias/build** — confirm `@/` resolves; `pnpm --filter client build` and `pnpm --filter client typecheck` stay green.
 - **Hooks** — pre-push (format-check + lint + typecheck + test) passes.
 
 ---
