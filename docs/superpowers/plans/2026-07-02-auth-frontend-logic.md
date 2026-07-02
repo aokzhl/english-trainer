@@ -29,7 +29,7 @@
 
 **Files:**
 - Modify: `apps/client/package.json` (devDeps + скрипт `test`)
-- Create: `apps/client/vitest.config.ts`
+- Modify: `apps/client/vite.config.ts` (алиас из tsconfig + тест-конфиг в том же файле)
 - Create: `apps/client/src/common/lib/react/create-strict-context.ts`
 - Create: `apps/client/src/common/lib/react/use-strict-context.ts`
 - Create: `apps/client/src/common/lib/react/create-di.ts`
@@ -56,18 +56,24 @@ Expected: пакеты добавлены в `apps/client/package.json` → `dev
 "test": "vitest run",
 ```
 
-- [ ] **Step 3: Создать `apps/client/vitest.config.ts`**
+- [ ] **Step 3: Обновить `apps/client/vite.config.ts` — алиас из tsconfig + тест-конфиг**
+
+Не дублируем алиас руками: используем встроенную опцию Vite `resolve.tsconfigPaths: true` (берёт `paths` из tsconfig). Тест-конфиг кладём сюда же (`defineConfig` из `vitest/config`) — отдельный `vitest.config.ts` не нужен.
 
 ```ts
-import path from 'node:path'
+/// <reference types="vitest/config" />
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
-    alias: {
-      '@': path.resolve(import.meta.dirname, 'src'),
+    tsconfigPaths: true,
+  },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3001',
     },
   },
   test: {
@@ -75,6 +81,13 @@ export default defineConfig({
   },
 })
 ```
+
+> **Проверка/фолбэк:** Vite читает `apps/client/tsconfig.json` — а он у нас содержит только `references` (сам `@/*` в `tsconfig.app.json`). Резолв `@/` реально проверяется на Task 3 (тест рендерит `session.provider.tsx`, который импортит `@/common/lib/react/create-di`). Если тесты падают с «Failed to resolve import '@/...'», значит oxc-резолвер не прошёл по `references` — тогда фолбэк: вернуть явный алиас в этот же файл вместо `tsconfigPaths`:
+> ```ts
+> import path from 'node:path'
+> // ...
+> resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
+> ```
 
 - [ ] **Step 4: Написать падающий тест `create-di.test.tsx`**
 
@@ -157,7 +170,7 @@ Expected: PASS (2 теста).
 
 ```bash
 pnpm format
-git add apps/client/package.json apps/client/pnpm-lock.yaml pnpm-lock.yaml apps/client/vitest.config.ts apps/client/src/common/lib/react/
+git add apps/client/package.json pnpm-lock.yaml apps/client/vite.config.ts apps/client/src/common/lib/react/
 git commit -m "feat(client): DI helpers (createDi, strict context) + vitest harness"
 ```
 (Замечание: lock-файл лежит в корне репозитория — добавляй тот путь, что показал `git status`.)
