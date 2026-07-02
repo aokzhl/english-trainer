@@ -1,19 +1,19 @@
-import path from 'node:path'
+/// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    alias: {
-      '@': path.resolve(import.meta.dirname, 'src'),
-    },
+    tsconfigPaths: true,
   },
   server: {
     proxy: {
       '/api': 'http://localhost:3001',
     },
+  },
+  test: {
+    environment: 'jsdom',
   },
 })

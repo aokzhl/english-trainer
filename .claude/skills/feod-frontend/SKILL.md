@@ -50,6 +50,7 @@ client/src/
 | Точка входа, роутер, конфиги, интеграции, layouts | `reference/level-app.md` |
 | Новая страница / роут | `reference/level-pages.md` |
 | Новый модуль, стор, фича, кросс-модульное взаимодействие, IoC | `reference/level-modules.md` |
+| DI (внедрение зависимостей в сторы/сервисы), провайдеры, модуль core | `reference/di-and-core.md` |
 | Утилита, общий компонент, хук, константы, типы | `reference/level-common.md` |
 | Глобальные типы, полифиллы, d.ts | `reference/level-globals.md` |
 | «Куда положить X?» (API, i18n, layouts, типы, UI-kit) | `reference/where-to-store.md` |

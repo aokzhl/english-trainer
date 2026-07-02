@@ -1,7 +1,8 @@
 type HttpClientConfig = {
   baseUrl: string
   getToken: () => string | null
-  onUnauthorized?: () => void
+  refresh: () => Promise<string | null>
+  onAuthFailure: () => void
 }
 
 export class HttpError extends Error {
@@ -16,6 +17,7 @@ export class HttpError extends Error {
 
 class HttpClient {
   private config: HttpClientConfig | null = null
+  private refreshPromise: Promise<string | null> | null = null
 
   configure(config: HttpClientConfig): void {
     this.config = config
@@ -25,29 +27,40 @@ class HttpClient {
     return this.request<T>(path)
   }
 
-  post<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>(path, { method: 'POST', body: JSON.stringify(body) })
+  post<T>(path: string, body?: unknown): Promise<T> {
+    return this.request<T>(path, {
+      method: 'POST',
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
   }
 
-  put<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>(path, { method: 'PUT', body: JSON.stringify(body) })
+  put<T>(path: string, body?: unknown): Promise<T> {
+    return this.request<T>(path, {
+      method: 'PUT',
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
   }
 
   delete<T>(path: string): Promise<T> {
     return this.request<T>(path, { method: 'DELETE' })
   }
 
-  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  private async request<T>(
+    path: string,
+    init: RequestInit = {},
+    retried = false,
+  ): Promise<T> {
     if (!this.config) {
       throw new Error(
-        'httpClient не сконфигурирован (см. app/integrations/http.ts)',
+        'httpClient не сконфигурирован (см. app/composition-root.ts)',
       )
     }
-    const { baseUrl, getToken, onUnauthorized } = this.config
+    const { baseUrl, getToken, onAuthFailure } = this.config
     const token = getToken()
 
     const response = await fetch(`${baseUrl}${path}`, {
       ...init,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -55,23 +68,36 @@ class HttpClient {
       },
     })
 
-    if (response.status === 401) {
-      onUnauthorized?.()
+    if (response.status === 401 && !path.startsWith('/auth/')) {
+      if (!retried) {
+        const newToken = await this.runRefresh().catch(() => null)
+        if (newToken !== null) {
+          return this.request<T>(path, init, true)
+        }
+      }
+      onAuthFailure()
     }
+
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as {
         message?: string
       } | null
       throw new HttpError(response.status, body?.message ?? response.statusText)
     }
+
     if (response.status === 204) {
       return undefined as T
     }
-    const text = await response.text()
-    if (!text) {
-      return undefined as T
+    return response.json() as Promise<T>
+  }
+
+  private runRefresh(): Promise<string | null> {
+    if (this.refreshPromise === null) {
+      this.refreshPromise = this.config!.refresh().finally(() => {
+        this.refreshPromise = null
+      })
     }
-    return JSON.parse(text) as T
+    return this.refreshPromise
   }
 }
 
