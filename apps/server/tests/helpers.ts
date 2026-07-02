@@ -1,11 +1,12 @@
 import { buildApp } from '../src/app/buildApp'
+import { createTestDb } from '../src/db/client'
 
 type App = ReturnType<typeof buildApp>
 
-// ':memory:' — своя изолированная in-memory БД на каждый вызов (у better-sqlite3
-// она привязана к соединению, а app держит одно соединение). Ноль cleanup.
+// Свежая изолированная PGlite-БД на каждый вызов — ноль cleanup.
 export async function buildTestApp(extend?: (app: App) => void) {
-  const app = buildApp({ dbPath: ':memory:' })
+  const db = await createTestDb()
+  const app = buildApp({ db })
   extend?.(app)
   await app.ready()
   return app

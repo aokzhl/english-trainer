@@ -1,15 +1,15 @@
 import fastify from 'fastify'
 import fastifyCookie from '@fastify/cookie'
 import fastifyJwt from '@fastify/jwt'
-import { createDb } from '../db/client'
+import type { Db } from '../db/client'
 import { AuthError } from '../modules/auth'
 import { authRoutes } from '../routes/auth'
 import { config } from './config'
 
-export function buildApp(opts: { dbPath: string; logger?: boolean }) {
+export function buildApp(opts: { db: Db; logger?: boolean }) {
   const app = fastify({ logger: opts.logger ?? false })
 
-  app.decorate('db', createDb(opts.dbPath))
+  app.decorate('db', opts.db)
 
   app.register(fastifyJwt, {
     secret: config.jwtSecret,
