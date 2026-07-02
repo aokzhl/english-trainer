@@ -24,23 +24,29 @@
 
 ## Task 0: Fix the `@/` alias resolution (Vite/Vitest/Storybook prerequisite)
 
-**Premise corrected (verified 2026-07-02):** `@/` **already resolves natively** in Vite 8 / Vitest 4 — `pnpm --filter client test` (28/28 pass) and `pnpm --filter client build` (101 modules, `router.ts` imports via `@/`) are both green with **no** `vite-tsconfig-paths` installed. Storybook reuses this Vite config, so its builder resolves `@/` natively too — **no plugin needed**. This task is now a small cleanup only: remove the dead `resolve: { tsconfigPaths: true }` block (an invalid Vite option that misleads readers into thinking it does the alias work) and the redundant `/// <reference types="vitest/config" />` line (types already come from importing `defineConfig` from `vitest/config`; it triggers a non-blocking oxlint triple-slash warning).
+**Premise corrected (verified 2026-07-02):** `@/` **already resolves natively** in Vite 8 / Vitest 4 (esbuild reads tsconfig `paths`) — `pnpm --filter client test` (28/28) and `pnpm --filter client build` (101 modules, `router.ts` imports via `@/`) are both green with **no** `vite-tsconfig-paths` installed. So this task does two things: (1) remove the dead `resolve: { tsconfigPaths: true }` block (an invalid Vite option that misleads readers) and the redundant `/// <reference types="vitest/config" />` line; (2) replace them with an **explicit `resolve.alias`** for `@` → `./src`. Native esbuild resolution already works, but an explicit alias makes it unambiguous and **guarantees the Storybook Vite builder resolves `@/`** (incl. in `.mdx`/story contexts) rather than relying on implicit behavior. Still **no** `vite-tsconfig-paths` plugin (YAGNI).
 
 **Files:**
 - Modify: `apps/client/vite.config.ts`
 
 **Interfaces:**
-- Produces: no interface change — `@/*` → `src/*` continues to resolve natively. Do **not** add `vite-tsconfig-paths` (YAGNI).
+- Produces: `@/*` → `src/*` via an explicit `resolve.alias`. Do **not** add `vite-tsconfig-paths`.
 
-- [ ] **Step 1: Rewrite `vite.config.ts` (drop dead `resolve` block + redundant reference)**
+- [ ] **Step 1: Rewrite `vite.config.ts` (drop dead config; add explicit alias)**
 
 ```ts
+import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   server: {
     proxy: {
       '/api': 'http://localhost:3001',
