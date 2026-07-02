@@ -7,7 +7,11 @@ afterAll(() => app.close())
 const body = { email: 'User@Example.com', password: 'abc12345' }
 
 test('успешная регистрация: 201, accessToken, refresh-cookie', async () => {
-  const res = await app.inject({ method: 'POST', url: '/api/auth/register', payload: body })
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/auth/register',
+    payload: body,
+  })
 
   expect(res.statusCode).toBe(201)
   expect(res.json().accessToken).toEqual(expect.any(String))

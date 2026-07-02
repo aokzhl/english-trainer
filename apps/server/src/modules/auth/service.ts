@@ -16,7 +16,11 @@ export async function registerUser(
   password: string,
 ): Promise<{ userId: number }> {
   const normalized = normalizeEmail(email)
-  const existing = db.select().from(users).where(eq(users.email, normalized)).get()
+  const existing = db
+    .select()
+    .from(users)
+    .where(eq(users.email, normalized))
+    .get()
   if (existing) {
     throw new AuthError(409, 'Пользователь с таким email уже существует')
   }
@@ -24,7 +28,11 @@ export async function registerUser(
   const passwordHash = await bcrypt.hash(password, BCRYPT_COST)
   const [user] = db
     .insert(users)
-    .values({ email: normalized, passwordHash, createdAt: new Date().toISOString() })
+    .values({
+      email: normalized,
+      passwordHash,
+      createdAt: new Date().toISOString(),
+    })
     .returning()
     .all()
 

@@ -9,7 +9,10 @@ export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
 }
 
-export function issueRefreshToken(db: Db, userId: number): { token: string; expiresAt: string } {
+export function issueRefreshToken(
+  db: Db,
+  userId: number,
+): { token: string; expiresAt: string } {
   const token = randomBytes(32).toString('base64url')
   const now = new Date()
   const expiresAt = new Date(
@@ -17,7 +20,12 @@ export function issueRefreshToken(db: Db, userId: number): { token: string; expi
   ).toISOString()
 
   db.insert(refreshTokens)
-    .values({ userId, tokenHash: hashToken(token), expiresAt, createdAt: now.toISOString() })
+    .values({
+      userId,
+      tokenHash: hashToken(token),
+      expiresAt,
+      createdAt: now.toISOString(),
+    })
     .run()
 
   return { token, expiresAt }

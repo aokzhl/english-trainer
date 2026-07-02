@@ -12,7 +12,11 @@ import { config } from '../app/config'
 
 export const REFRESH_COOKIE = 'refresh_token'
 
-function setRefreshCookie(reply: FastifyReply, token: string, expiresAt: string) {
+function setRefreshCookie(
+  reply: FastifyReply,
+  token: string,
+  expiresAt: string,
+) {
   reply.setCookie(REFRESH_COOKIE, token, {
     path: '/api/auth',
     httpOnly: true,
@@ -29,7 +33,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ message: parsed.error.issues[0].message })
     }
 
-    const { userId } = await registerUser(app.db, parsed.data.email, parsed.data.password)
+    const { userId } = await registerUser(
+      app.db,
+      parsed.data.email,
+      parsed.data.password,
+    )
     const refresh = issueRefreshToken(app.db, userId)
     const accessToken = await reply.jwtSign({ sub: userId })
 
@@ -43,7 +51,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ message: parsed.error.issues[0].message })
     }
 
-    const { userId } = await verifyUser(app.db, parsed.data.email, parsed.data.password)
+    const { userId } = await verifyUser(
+      app.db,
+      parsed.data.email,
+      parsed.data.password,
+    )
     const refresh = issueRefreshToken(app.db, userId)
     const accessToken = await reply.jwtSign({ sub: userId })
 

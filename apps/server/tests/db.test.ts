@@ -8,7 +8,11 @@ test('миграции применяются, users и refresh_tokens дост�
 
   const [user] = db
     .insert(users)
-    .values({ email: 'a@b.co', passwordHash: 'hash', createdAt: new Date().toISOString() })
+    .values({
+      email: 'a@b.co',
+      passwordHash: 'hash',
+      createdAt: new Date().toISOString(),
+    })
     .returning()
     .all()
 
@@ -24,6 +28,10 @@ test('миграции применяются, users и refresh_tokens дост�
     })
     .run()
 
-  const rows = db.select().from(refreshTokens).where(eq(refreshTokens.userId, user.id)).all()
+  const rows = db
+    .select()
+    .from(refreshTokens)
+    .where(eq(refreshTokens.userId, user.id))
+    .all()
   expect(rows).toHaveLength(1)
 })
