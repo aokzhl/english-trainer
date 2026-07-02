@@ -102,7 +102,7 @@ describe('httpClient', () => {
     fetchMock
       .mockResolvedValueOnce(res(401, {}))
       .mockResolvedValueOnce(res(401, {}))
-      .mockResolvedValue(res(200, { ok: true }))
+      .mockImplementation(() => res(200, { ok: true }))
 
     await Promise.all([httpClient.get('/a'), httpClient.get('/b')])
 

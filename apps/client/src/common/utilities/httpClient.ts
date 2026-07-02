@@ -77,17 +77,16 @@ class HttpClient {
     }
 
     if (!response.ok) {
-      const body = (await response
-        .clone()
-        .json()
-        .catch(() => null)) as { message?: string } | null
+      const body = (await response.json().catch(() => null)) as {
+        message?: string
+      } | null
       throw new HttpError(response.status, body?.message ?? response.statusText)
     }
 
     if (response.status === 204) {
       return undefined as T
     }
-    return response.clone().json() as Promise<T>
+    return response.json() as Promise<T>
   }
 
   private runRefresh(): Promise<string | null> {
