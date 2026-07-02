@@ -1,57 +1,152 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/plus-jakarta-sans';
 @import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   LAYER 1 — PRIMITIVES (theme-agnostic raw scales, OKLCH)
+   Only the shades actually used by the semantic layer.
+   Swapping palette direction = edit this block.
+   ============================================================ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --white: oklch(1 0 0);
+  --black: oklch(0 0 0);
+
+  /* Indigo (primary family) */
+  --indigo-50: oklch(0.962 0.018 277);
+  --indigo-100: oklch(0.93 0.033 277);
+  --indigo-400: oklch(0.673 0.163 277);
+  --indigo-500: oklch(0.585 0.203 277);
+  --indigo-600: oklch(0.511 0.226 277);
+  --indigo-950: oklch(0.262 0.09 277);
+
+  /* Green (success / "знаю" / progress) */
+  --green-500: oklch(0.723 0.192 149);
+  --green-600: oklch(0.627 0.17 149);
+
+  /* Amber (streak 🔥) */
+  --amber-400: oklch(0.828 0.147 78);
+  --amber-500: oklch(0.769 0.16 74);
+
+  /* Red (destructive / "не знаю") */
+  --red-400: oklch(0.704 0.181 22);
+  --red-600: oklch(0.577 0.223 27);
+
+  /* Blue (info) */
+  --blue-500: oklch(0.623 0.19 259);
+
+  /* Neutrals (cool, slate-ish) */
+  --neutral-50: oklch(0.984 0.003 247);
+  --neutral-100: oklch(0.968 0.005 247);
+  --neutral-200: oklch(0.92 0.006 247);
+  --neutral-400: oklch(0.704 0.02 256);
+  --neutral-500: oklch(0.554 0.03 257);
+  --neutral-800: oklch(0.28 0.03 257);
+  --neutral-900: oklch(0.22 0.028 265);
+  --neutral-950: oklch(0.17 0.024 275);
+}
+
+/* ============================================================
+   LAYER 2 — SEMANTIC (role → primitive, per theme)
+   shadcn role names preserved + product roles added.
+   ============================================================ */
+:root {
+  --radius: 0.75rem;
+
+  --background: var(--white);
+  --foreground: var(--indigo-950);
+  --card: var(--white);
+  --card-foreground: var(--indigo-950);
+  --popover: var(--white);
+  --popover-foreground: var(--indigo-950);
+
+  --primary: var(--indigo-600);
+  --primary-foreground: var(--white);
+  --secondary: var(--neutral-100);
+  --secondary-foreground: var(--indigo-950);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-500);
+  --accent: var(--indigo-50);
+  --accent-foreground: var(--indigo-600);
+
+  --destructive: var(--red-600);
+  --destructive-foreground: var(--white);
+
+  /* product-semantic (used by features + composites) */
+  --success: var(--green-600);
+  --success-foreground: var(--white);
+  --streak: var(--amber-500);
+  --streak-foreground: var(--neutral-950);
+  --warning: var(--amber-500);
+  --warning-foreground: var(--neutral-950);
+  --info: var(--blue-500);
+  --info-foreground: var(--white);
+
+  --border: var(--neutral-200);
+  --input: var(--neutral-200);
+  --ring: var(--indigo-600);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
+  --background: var(--neutral-950);
+  --foreground: oklch(0.92 0.01 285);
+  --card: var(--neutral-900);
+  --card-foreground: oklch(0.92 0.01 285);
+  --popover: var(--neutral-900);
+  --popover-foreground: oklch(0.92 0.01 285);
+
+  --primary: var(--indigo-400);
+  --primary-foreground: var(--neutral-950);
+  --secondary: var(--neutral-800);
+  --secondary-foreground: oklch(0.92 0.01 285);
+  --muted: var(--neutral-800);
+  --muted-foreground: var(--neutral-400);
+  --accent: var(--neutral-800);
+  --accent-foreground: var(--indigo-400);
+
+  --destructive: var(--red-400);
+  --destructive-foreground: var(--neutral-950);
+
+  --success: var(--green-500);
+  --success-foreground: var(--neutral-950);
+  --streak: var(--amber-400);
+  --streak-foreground: var(--neutral-950);
+  --warning: var(--amber-400);
+  --warning-foreground: var(--neutral-950);
+  --info: var(--blue-500);
+  --info-foreground: var(--neutral-950);
+
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: var(--indigo-400);
 }
 
+/* ============================================================
+   LAYER 3 — COMPONENT (Tailwind bridge)
+   Exposes semantic tokens as utilities + fonts/radius/shadow.
+   ============================================================ */
 @theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading:
+    'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-xs: 0 1px 2px 0 oklch(0.2 0.04 277 / 0.06);
+  --shadow-sm:
+    0 1px 3px 0 oklch(0.2 0.04 277 / 0.08),
+    0 1px 2px -1px oklch(0.2 0.04 277 / 0.08);
+  --shadow-md:
+    0 4px 12px -2px oklch(0.2 0.04 277 / 0.1),
+    0 2px 6px -2px oklch(0.2 0.04 277 / 0.08);
+  --shadow-lg:
+    0 12px 28px -6px oklch(0.2 0.04 277 / 0.14),
+    0 4px 10px -4px oklch(0.2 0.04 277 / 0.1);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -68,6 +163,14 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-streak: var(--streak);
+  --color-streak-foreground: var(--streak-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -78,6 +181,12 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
   }
 }
