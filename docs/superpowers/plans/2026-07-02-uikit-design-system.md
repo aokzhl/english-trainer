@@ -4,9 +4,9 @@
 
 **Goal:** Stand up a production-grade frontend UI foundation for `apps/client` — layered design tokens (Indigo Focus), a seeded shadcn/ui component kit, two WordForge composites, a runtime light/dark theme, and Storybook as the build/documentation/verification harness.
 
-**Architecture:** Tailwind v4 CSS variables in `styles.css` restructured into three token layers (primitive → semantic → component). shadcn primitives generated into `common/ui/` (no barrels; direct imports). A MobX `ThemeStore` (factory + DI provider) lives in `common/theme/` (documented FEOD deviation, per user) and is added to the existing `AppGraph` in `composition-root.ts`. Storybook (latest, `@storybook/react-vite`) reuses the client's Vite config; every component gets a colocated `*.stories.tsx`. Visual verification is driven by the Playwright MCP browser against a running Storybook.
+**Architecture:** Tailwind v4 CSS variables in `styles.css` restructured into three token layers (primitive → semantic → component). shadcn primitives generated into `common/ui/` (no barrels; direct imports). A MobX `ThemeStore` (factory + DI provider) lives in `common/theme/` (FEOD-consistent: `common/ui` must read the theme, and `common` can't import `modules`) and is added to the existing `AppGraph` in `composition-root.ts`. Storybook (latest, `@storybook/react-vite`) reuses the client's Vite config (`@/` resolves natively in Vite 8 — no alias plugin needed); every component gets a colocated `*.stories.tsx`. Visual verification is driven by the Playwright MCP browser against a running Storybook.
 
-**Tech Stack:** React 18, Vite 8, Tailwind v4 (`@tailwindcss/vite`), shadcn/ui (new-york), MobX, TanStack Router, React Hook Form, Storybook (react-vite) + addon-a11y + addon-themes + addon-docs, `@fontsource-variable/*`, Vitest, Playwright MCP.
+**Tech Stack:** React 18, Vite 8 (native tsconfig-paths resolution), Tailwind v4 (`@tailwindcss/vite`), shadcn/ui (new-york), MobX, TanStack Router, React Hook Form, Storybook (react-vite) + addon-a11y + addon-themes + addon-docs, `@fontsource-variable/*`, Vitest, Playwright MCP.
 
 ## Global Constraints
 
@@ -24,32 +24,23 @@
 
 ## Task 0: Fix the `@/` alias resolution (Vite/Vitest/Storybook prerequisite)
 
-`vite.config.ts` has `resolve: { tsconfigPaths: true }` — not a real Vite option (silently ignored). Storybook will reuse this config, so `@/` must resolve for real. Fix once, benefits app + tests + Storybook.
+**Premise corrected (verified 2026-07-02):** `@/` **already resolves natively** in Vite 8 / Vitest 4 — `pnpm --filter client test` (28/28 pass) and `pnpm --filter client build` (101 modules, `router.ts` imports via `@/`) are both green with **no** `vite-tsconfig-paths` installed. Storybook reuses this Vite config, so its builder resolves `@/` natively too — **no plugin needed**. This task is now a small cleanup only: remove the dead `resolve: { tsconfigPaths: true }` block (an invalid Vite option that misleads readers into thinking it does the alias work) and the redundant `/// <reference types="vitest/config" />` line (types already come from importing `defineConfig` from `vitest/config`; it triggers a non-blocking oxlint triple-slash warning).
 
 **Files:**
 - Modify: `apps/client/vite.config.ts`
-- Add dep: `vite-tsconfig-paths` (dev)
 
 **Interfaces:**
-- Produces: a working `@/*` → `src/*` alias in all Vite/Vitest contexts.
+- Produces: no interface change — `@/*` → `src/*` continues to resolve natively. Do **not** add `vite-tsconfig-paths` (YAGNI).
 
-- [ ] **Step 1: Add the plugin dependency**
-
-```bash
-pnpm add -D --filter client vite-tsconfig-paths
-```
-
-- [ ] **Step 2: Rewrite `vite.config.ts` to use the plugin**
+- [ ] **Step 1: Rewrite `vite.config.ts` (drop dead `resolve` block + redundant reference)**
 
 ```ts
-/// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), tsconfigPaths()],
+  plugins: [react(), tailwindcss()],
   server: {
     proxy: {
       '/api': 'http://localhost:3001',
@@ -61,22 +52,22 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 3: Verify existing tests still resolve `@/` and pass**
+- [ ] **Step 2: Verify `@/` still resolves in tests (native)**
 
 Run: `pnpm --filter client test`
-Expected: PASS — existing suites (`composition-root.test.ts`, `httpClient.test.ts`, `auth.service.test.ts`, `session.store.test.ts`, `authApi.test.ts`) green; no "Cannot find module '@/…'" errors.
+Expected: PASS — all existing suites green (28 tests); no "Cannot find module '@/…'". (The `Пустое значение контекста` log lines from `create-di.test.tsx` are an intentional strict-context assertion, not a failure.)
 
-- [ ] **Step 4: Verify typecheck + build**
+- [ ] **Step 3: Verify typecheck + build**
 
 Run: `pnpm --filter client typecheck && pnpm --filter client build`
-Expected: PASS (build emits `dist/`).
+Expected: PASS — build emits `dist/`; `router.ts`'s `@/` imports resolve.
 
-- [ ] **Step 5: Format + commit**
+- [ ] **Step 4: Format + lint + commit**
 
 ```bash
-pnpm format
-git add apps/client/vite.config.ts apps/client/package.json package.json pnpm-lock.yaml
-git commit -m "fix(client): resolve @/ alias via vite-tsconfig-paths"
+pnpm format && pnpm --filter client lint
+git add apps/client/vite.config.ts
+git commit -m "chore(client): drop dead resolve.tsconfigPaths config (@/ resolves natively)"
 ```
 
 ---

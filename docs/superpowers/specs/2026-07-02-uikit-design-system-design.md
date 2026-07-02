@@ -35,7 +35,7 @@ Out of scope (YAGNI): building actual feature screens; Playwright/browser-based 
 
 ### 2.1 Pre-existing bug to fix (in scope)
 
-`vite.config.ts` has `resolve: { tsconfigPaths: true }` — **not a valid Vite option** (silently ignored), so the `@/` alias is not actually resolved by Vite/Vitest. We add the `vite-tsconfig-paths` plugin and remove the dead option. This fixes alias resolution uniformly for the app, Vitest, **and** Storybook (which reuses this Vite config). Small, in-the-blast-radius fix — required for Storybook to resolve `@/`.
+`vite.config.ts` has `resolve: { tsconfigPaths: true }` — **not a valid Vite option** (silently ignored). But verification (2026-07-02) showed `@/` **already resolves natively** in Vite 8 / Vitest 4 (tests 28/28 + `vite build` green with no plugin), and Storybook's Vite builder inherits that. So no `vite-tsconfig-paths` is needed; the task is a small cleanup — remove the dead `resolve` block (and the redundant `/// <reference types="vitest/config" />`) so the config stops misleading readers.
 
 ---
 
@@ -153,7 +153,7 @@ Mirrors the existing graph/provider pattern (`createGraph()` in `app/composition
 
 ## 7. Storybook harness
 
-**Storybook latest** (currently **v10.x**, via `storybook@latest init`) with the **`@storybook/react-vite`** framework, reusing `apps/client/vite.config.ts` (so Tailwind v4 + the `@/` alias via `vite-tsconfig-paths` work automatically). `main.ts` uses `defineMain` from `@storybook/react-vite/node`. (Fallback: if v10 has trouble with Vite 8, pin to Storybook 9 — same framework/addon API.)
+**Storybook latest** (currently **v10.x**, via `storybook@latest init`) with the **`@storybook/react-vite`** framework, reusing `apps/client/vite.config.ts` (Tailwind v4 + native `@/` alias resolution work automatically). `main.ts` uses `defineMain` from `@storybook/react-vite/node`. (Fallback: if v10 has trouble with Vite 8, pin to Storybook 9 — same framework/addon API.)
 
 **Config (`apps/client/.storybook/`):**
 
@@ -202,7 +202,7 @@ apps/client/
 │   │       ├── theme.store.ts + theme.store.test.ts
 │   │       └── theme.provider.tsx
 │   └── app/composition-root.ts # ← add `theme` to AppGraph, wire real ports
-├── vite.config.ts              # ← add vite-tsconfig-paths, drop dead option
+├── vite.config.ts              # ← drop dead resolve.tsconfigPaths (native @/ resolution)
 └── package.json                # ← storybook scripts + deps
 ```
 
@@ -212,7 +212,7 @@ apps/client/
 
 All via `pnpm add --filter client` (never hand-edit versions — project rule).
 
-- **Dev:** `storybook` + `@storybook/react-vite` + `@storybook/addon-a11y` + `@storybook/addon-docs` (via `storybook@latest init`), `@storybook/addon-themes` (via `storybook add`), `vite-tsconfig-paths`.
+- **Dev:** `storybook` + `@storybook/react-vite` + `@storybook/addon-a11y` + `@storybook/addon-docs` (via `storybook@latest init`), `@storybook/addon-themes` (via `storybook add`). (No `vite-tsconfig-paths` — `@/` resolves natively in Vite 8.)
 - **Runtime (fonts):** `@fontsource-variable/inter`, `@fontsource-variable/plus-jakarta-sans` (self-hosted, decided).
 - shadcn primitives pull their own Radix deps automatically via the CLI.
 
