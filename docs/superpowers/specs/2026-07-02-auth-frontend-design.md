@@ -27,6 +27,42 @@
 | Защита маршрутов | `beforeLoad` в pathless layout-роуте `_authenticated`, `session` в router context |
 | Экран auth | Один маршрут `/auth` с табами Вход/Регистрация |
 
+## Фазирование
+
+Реализуем в две фазы. **Эта работа — только Фаза 1 (логика).** UI и роутинг
+требуют отдельной инфраструктуры (shadcn/ui + Tailwind, loader, файловый плагин)
+и идут отдельной фазой.
+
+### Фаза 1 — логика (юнит-тестируемо, без рендера страниц)
+
+- DI-инфраструктура `common/lib/react` (`createDi`, строгий контекст, `Compose`).
+- `modules/core/modules/Session`: `session.store`, `session.provider`,
+  `session.types`, `index` (+ реэкспорт из `core/index.ts`).
+- `modules/Auth` без компонентов: `api/authApi`, `auth.service`, `auth.provider`,
+  `index`.
+- `httpClient`: refresh-on-401 (single-flight) + `credentials:'include'` +
+  `getToken` из сессии. В Фазе 1 `onAuthFailure` только `session.clear()`
+  (redirect через `router.navigate` подключается в Фазе 2).
+- `app/composition-root`: `createGraph()`, `configureHttp(graph)`,
+  `bootstrap` — как чистые функции/действия (без `App.tsx`-рендера и `RouterProvider`).
+- Тест-инфра (`vitest`, `jsdom`, `@testing-library/react`,
+  `@testing-library/user-event`) и тесты: DI, `session.store`, `authService`,
+  `httpClient` (см. «Тестирование»).
+- Правка доков: фиксация `common/lib/react/` для DI-хелперов; отметка про DI
+  vs синглтоны.
+
+### Фаза 2 — UI и роутинг (отдельно, после инфры UI)
+
+- `components`: `AuthTabs`, `LoginForm`, `RegisterForm`; shadcn `Tabs`, loader.
+- Файловый роутинг: vite-plugin, `__root`, `_authenticated` + `beforeLoad`,
+  `/auth`, миграция `pages/`.
+- `app/App.tsx`: рендер, `RouterProvider` c `session` в context, `LoaderScreen`;
+  `onAuthFailure` → `router.navigate('/auth')`.
+- Компонентные тесты форм.
+- Правки доков про роутинг (CLAUDE.md, conventions, `level-app`/`level-pages`).
+
+Ниже — полный целевой дизайн; разделы, помеченные как Фаза 2, реализуются позже.
+
 ## DI-инфраструктура (`common/lib/react`)
 
 Три однофайловые common-сущности (без barrel, импорт прямой) — как в
@@ -147,7 +183,7 @@ type HttpClientConfig = {
 - **Logout:** `authService.logout()` → POST `/api/auth/logout` → `session.clear()` →
   `navigate('/auth')`.
 
-## Роутинг (файловый, TanStack)
+## Роутинг (файловый, TanStack) — Фаза 2
 
 Vite-плагин `@tanstack/router-plugin/vite`:
 `tanstackRouter({ target: 'react', autoCodeSplitting: true, routesDirectory: './src/pages', generatedRouteTree: './src/routeTree.gen.ts' })`,
