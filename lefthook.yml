@@ -12,7 +12,11 @@ pre-commit:
   jobs:
     - name: format
       glob: '*.{ts,tsx,css,json}'
-      run: pnpm exec oxfmt --write {staged_files}
+      # --no-error-on-unmatched-pattern: если единственный staged-файл под маской
+      # отсеян ignorePatterns из .oxfmtrc.json (напр. .claude/settings.json), oxfmt
+      # получает 0 целей. Без флага это exit 2 и падение хука; с флагом — тихий 0.
+      # Игноры остаются единственным источником правды в .oxfmtrc.json.
+      run: pnpm exec oxfmt --write --no-error-on-unmatched-pattern {staged_files}
       stage_fixed: true
     - name: lint-client
       root: apps/client/

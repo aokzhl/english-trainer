@@ -10,3 +10,7 @@ dist/
 __pycache__/
 .playwright-mcp/
 storybook-static/
+
+# Byte-compiled / optimized / DLL files
+*.py[codz]
+*$py.class
