@@ -56,6 +56,10 @@ The server reads the connection string from `DATABASE_URL` (default: `postgres:/
 
 Add dependencies with `pnpm add` (`-Dw` for root, `--filter <pkg>` for a package) — don't hand-edit versions into `package.json`.
 
+### pnpm peer dependency rules
+
+The root `package.json` lists `pnpm.peerDependencyRules.ignoreMissing: ["playwright", "@vitest/browser-playwright", "@vitest/coverage-v8"]`. These entries prevent pnpm's autoInstallPeers from pulling vitest's optional playwright and coverage peers into the install graph — they are not needed for the project (Storybook runs standalone, no browser story-tests).
+
 ## Frontend architecture — FEOD
 
 `apps/client/src` follows **Fractal Entity Oriented Design** (feod.dev). This is enforced, not aspirational. There is a project skill **`feod-frontend`** — invoke it for ANY work under `apps/client/` (adding components/modules/pages/stores, refactoring, "where does this file go"). Project-specific conventions live in `docs/frontend-conventions.md` and `docs/module-example.md`.

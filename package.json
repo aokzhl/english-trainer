@@ -21,6 +21,13 @@
     "onlyBuiltDependencies": [
       "bcrypt",
       "lefthook"
-    ]
+    ],
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "playwright",
+        "@vitest/browser-playwright",
+        "@vitest/coverage-v8"
+      ]
+    }
   }
 }

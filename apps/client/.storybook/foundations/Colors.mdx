@@ -1,0 +1,47 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Foundations/Colors" />
+
+# Colors — Indigo Focus
+
+Reference **semantic** tokens only (`bg-primary`, `text-success`, `bg-streak`). Never primitives or raw hex.
+
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+    gap: '12px',
+  }}
+>
+  {[
+    ['background', '--color-background'],
+    ['foreground', '--color-foreground'],
+    ['primary', '--color-primary'],
+    ['secondary', '--color-secondary'],
+    ['muted', '--color-muted'],
+    ['accent', '--color-accent'],
+    ['success', '--color-success'],
+    ['streak', '--color-streak'],
+    ['warning', '--color-warning'],
+    ['info', '--color-info'],
+    ['destructive', '--color-destructive'],
+    ['border', '--color-border'],
+  ].map(([name, token]) => (
+    <div
+      key={name}
+      style={{
+        border: '1px solid var(--color-border)',
+        borderRadius: 8,
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ height: 56, background: `var(${token})` }} />
+      <div style={{ padding: 8, fontSize: 12, fontFamily: 'var(--font-sans)' }}>
+        <div style={{ fontWeight: 600 }}>{name}</div>
+        <code style={{ color: 'var(--color-muted-foreground)' }}>{token}</code>
+      </div>
+    </div>
+  ))}
+</div>
+
+Toggle the toolbar theme (light/dark) to preview both palettes.

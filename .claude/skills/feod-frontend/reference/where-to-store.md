@@ -57,7 +57,9 @@ FEOD соблюдается, несколько вариантов размещ�
 | Обёртка над fetch без домена | `common/utilities/` |
 | Layout | `app/layouts/` |
 | Константы маршрутов | `common/constants/routes.ts` |
-| Стор фичи (state-менеджер) | `modules/<Feature>/store/` |
+| Стор прикладной фичи (state-менеджер) | `modules/<Feature>/store/` |
+| Кросс-сквозной стор, читаемый **только** из modules/app | `modules/core/modules/<X>/` |
+| Кросс-сквозной стор, читаемый из **common/ui** (theme, dialog-manager) | `common/<x>/` (стор+провайдер) |
 | Переиспользуемый хук без бизнес-логики | `common/hooks/` |
 | Базовый однофайловый UI-компонент | `common/ui/` |
 | env.d.ts, расширения типов | `globals/` |

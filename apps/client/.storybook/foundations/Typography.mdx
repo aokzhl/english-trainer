@@ -1,0 +1,38 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Foundations/Typography" />
+
+# Typography
+
+- **Heading / display:** Plus Jakarta Sans — `font-heading`
+- **Body / reading:** Inter — `font-sans` (tabular figures for counters/timers)
+- Base 16px · line-height 1.5–1.6 · headings 600–700 · body 400 · labels 500
+
+<div style={{ fontFamily: 'var(--font-heading)' }}>
+  <p style={{ fontSize: 36, fontWeight: 700, margin: '4px 0' }}>
+    Учи слова каждый день
+  </p>
+  <p style={{ fontSize: 24, fontWeight: 600, margin: '4px 0' }}>
+    resilient — устойчивый
+  </p>
+</div>
+<p
+  style={{
+    fontFamily: 'var(--font-sans)',
+    fontSize: 16,
+    lineHeight: 1.6,
+    maxWidth: '60ch',
+  }}
+>
+  She stayed resilient through every setback, turning each failure into a
+  lesson.
+</p>
+<p
+  style={{
+    fontFamily: 'var(--font-sans)',
+    fontVariantNumeric: 'tabular-nums',
+    fontSize: 16,
+  }}
+>
+  Стрик: 7 · К повторению: 24 · Выучено: 142
+</p>

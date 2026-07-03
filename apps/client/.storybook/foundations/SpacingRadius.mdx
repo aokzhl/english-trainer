@@ -1,0 +1,76 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Foundations/Spacing & Radius" />
+
+# Spacing, Radius & Elevation
+
+**Spacing** — Tailwind's 4px scale; section rhythm tiers `16 / 24 / 32 / 48`.
+
+<div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+  {[4, 8, 12, 16, 24, 32, 48].map((n) => (
+    <div
+      key={n}
+      style={{
+        textAlign: 'center',
+        fontSize: 11,
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
+      <div
+        style={{
+          width: n,
+          height: n,
+          background: 'var(--color-primary)',
+          borderRadius: 2,
+        }}
+      />
+      {n}
+    </div>
+  ))}
+</div>
+
+**Radius** — `rounded-sm | md | lg | xl`
+
+<div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+  {['--radius-sm', '--radius-md', '--radius-lg', '--radius-xl'].map((r) => (
+    <div
+      key={r}
+      style={{
+        width: 72,
+        height: 48,
+        background: 'var(--color-muted)',
+        border: '1px solid var(--color-border)',
+        borderRadius: `var(${r})`,
+        fontSize: 11,
+        fontFamily: 'var(--font-sans)',
+        display: 'grid',
+        placeItems: 'center',
+      }}
+    >
+      {r.replace('--radius-', '')}
+    </div>
+  ))}
+</div>
+
+**Elevation** — `shadow-xs | sm | md | lg`
+
+<div style={{ display: 'flex', gap: 20, marginTop: 16, padding: 16 }}>
+  {['--shadow-xs', '--shadow-sm', '--shadow-md', '--shadow-lg'].map((s) => (
+    <div
+      key={s}
+      style={{
+        width: 72,
+        height: 48,
+        background: 'var(--color-card)',
+        borderRadius: 8,
+        boxShadow: `var(${s})`,
+        fontSize: 11,
+        fontFamily: 'var(--font-sans)',
+        display: 'grid',
+        placeItems: 'center',
+      }}
+    >
+      {s.replace('--shadow-', '')}
+    </div>
+  ))}
+</div>
